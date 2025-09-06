@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <main class="container">
+        <section class="section">
+            <div class="success-container">
+                <div class="success-card">
+                    <div class="success-icon">✅</div>
+                    <h1 class="text-title text-center mb-4">Group Submitted Successfully!</h1>
+                    <p class="text-subtitle text-center mb-6">
+                        Thank you for submitting "<strong><%= groupName %></strong>" to our directory.
+                    </p>
+                    
+                    <div class="notification-card mb-6">
+                        <h3>📋 What happens next?</h3>
+                        <ul class="list-disc list-inside text-sm">
+                            <li>Our admin team will review your group submission</li>
+                            <li>We'll verify the information provided</li>
+                            <li>Once approved, your group will appear in the public directory</li>
+                            <li>You'll be able to search for and view your group profile</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert--info mb-6">
+                        <strong>Review Process:</strong> Group approval typically takes 1-2 business days. 
+                        We'll review all submissions to ensure they meet our community guidelines.
+                    </div>
+                    
+                    <div class="flex gap-4 justify-center">
+                        <a href="/" class="btn btn--tech">← Return Home</a>
+                        <a href="/search" class="btn btn--outline">Browse Groups</a>
+                        <a href="/add-group" class="btn btn--outline">Add Another Group</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <style>
+        .success-container {
+            display: flex;
+            justify-content: center;
+            padding: var(--spacing-8) 0;
+        }
+        
+        .success-card {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-6);
+        }
+        
+        .alert {
+            padding: var(--spacing-4);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            text-align: left;
+        }
+        
+        .alert--info {
+            background-color: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+        }
+        
+        .notification-card ul {
+            margin-top: var(--spacing-3);
+            color: var(--color-text);
+        }
+        
+        .notification-card li {
+            margin-bottom: var(--spacing-2);
+        }
+        
+        @media (max-width: 768px) {
+            .success-container {
+                padding: var(--spacing-4);
+            }
+            
+            .flex {
+                flex-direction: column;
+            }
+            
+            .flex .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</body>
+</html>

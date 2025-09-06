@@ -12,7 +12,7 @@ exports.getHomepage = async (req, res) => {
 
     // Render the index page and pass the data
     res.render('index', {
-      title: 'Najja Groups - Home',
+      title: 'Naija Groups - Home',
       featuredGroups: featuredGroups // This must be an array of group objects
     });
   } catch (error) {

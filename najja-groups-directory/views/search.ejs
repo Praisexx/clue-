@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <main class="container">
+        <!-- Search Header -->
+        <section class="section">
+            <div class="text-center mb-8">
+                <h1 class="text-title mb-4">Find Your Community</h1>
+                <p class="text-subtitle">Search through our directory of Nigerian diaspora groups</p>
+            </div>
+            
+            <!-- Search Form -->
+            <div class="flex justify-center">
+                <form action="/search" method="GET" class="search-bar mb-8" id="searchForm" style="max-width: 600px; width: 100%;">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        class="search-bar__input" 
+                        placeholder="Search by group name, category, or location..." 
+                        value="<%= typeof query !== 'undefined' ? query : '' %>"
+                        aria-label="Search groups"
+                    >
+                    <button type="submit" class="search-bar__button">Search</button>
+                    
+                    <!-- Hidden fields for location data -->
+                    <input type="hidden" name="lat" id="userLat" value="<%= typeof userLat !== 'undefined' ? userLat : '' %>">
+                    <input type="hidden" name="lng" id="userLng" value="<%= typeof userLng !== 'undefined' ? userLng : '' %>">
+                    <input type="hidden" name="near_me" id="nearMe" value="false">
+                </form>
+            </div>
+            
+            <!-- Category Filter -->
+            <div class="filter-section mb-8">
+                <div class="flex justify-center">
+                    <div class="category-filter">
+                        <label class="filter-label">Filter by Category:</label>
+                        <div class="category-buttons">
+                            <a href="/search" class="category-btn <%= (typeof category === 'undefined' || category === '') ? 'active' : '' %>">
+                                All
+                            </a>
+                            <a href="/search?category=religious" class="category-btn <%= category === 'religious' ? 'active' : '' %>">
+                                Religious
+                            </a>
+                            <a href="/search?category=cultural" class="category-btn <%= category === 'cultural' ? 'active' : '' %>">
+                                Cultural
+                            </a>
+                            <a href="/search?category=professional" class="category-btn <%= category === 'professional' ? 'active' : '' %>">
+                                Professional
+                            </a>
+                            <a href="/search?category=student" class="category-btn <%= category === 'student' || category === 'students' ? 'active' : '' %>">
+                                Students
+                            </a>
+                            <a href="/search?category=social" class="category-btn <%= category === 'social' ? 'active' : '' %>">
+                                Social
+                            </a>
+                            <a href="/search?category=community" class="category-btn <%= category === 'community' ? 'active' : '' %>">
+                                Community
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Location Search Options -->
+            <div class="text-center mb-8">
+                <button id="nearMeBtn" class="btn btn--tech" onclick="findNearMe()">
+                    📍 Find Groups Near Me
+                </button>
+                
+                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                    <div class="admin-actions mt-4">
+                        <a href="/admin/dashboard" class="btn btn--outline">
+                            ⚙️ Admin Dashboard
+                        </a>
+                        <a href="/admin/manage-groups" class="btn btn--outline">
+                            📊 Manage Groups
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        </section>
+
+        <!-- Search Results -->
+        <section class="section">
+            <% if (typeof results !== 'undefined' && results.length > 0) { %>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold">
+                        <% if (typeof nearMe !== 'undefined' && nearMe) { %>
+                            📍 Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> near your location
+                            <span class="text-sm text-gray-500 block">(within <%= radius || 25 %> km)</span>
+                        <% } else if (typeof query !== 'undefined' && query) { %>
+                            Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> for "<%= query %>"
+                        <% } else { %>
+                            <%= resultsCount || results.length %> Group<%= (resultsCount || results.length) === 1 ? '' : 's' %> Available
+                        <% } %>
+                    </h2>
+                    
+                    <% if (typeof nearMe !== 'undefined' && nearMe) { %>
+                        <div class="flex gap-2">
+                            <a href="/" class="btn btn--outline">Return Home</a>
+                            <a href="/search" class="btn btn--tech">Browse All</a>
+                        </div>
+                    <% } %>
+                </div>
+                
+                <div class="card-grid-modern">
+                    <% results.forEach(function(group) { %>
+                        <div class="card group-card hover-lift">
+                            <div class="card__body">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="group-card__logo" style="background: var(--gradient-accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
+                                        <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="status-dot status-dot--active"></span>
+                                            <% if (group.featured) { %>
+                                                <span class="chip chip--success">Featured</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h3 class="group-card__title"><%= group.name %></h3>
+                                <p class="group-card__description">
+                                    <%= group.description ? group.description.substring(0, 120) + '...' : 'No description available.' %>
+                                </p>
+                                
+                                <div class="group-card__tags">
+                                    <% if (group.distance !== null && group.distance !== undefined) { %>
+                                        <span class="chip chip--success">📏 <%= group.distance %> km away</span>
+                                    <% } else if (group.city || group.country) { %>
+                                        <span class="chip">📍 <%= group.city || group.country %></span>
+                                    <% } %>
+                                    <% if (group.categories && group.categories.length > 0) { %>
+                                        <span class="chip chip--primary"><%= group.categories[0] %></span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="card__footer">
+                                <a href="/groups/<%= group.slug %>" class="btn btn--tech">
+                                    View Details
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M8.636 3.5a.5.5 0 0 0-.5.5v2h-3a.5.5 0 0 0 0 1h3v2a.5.5 0 0 0 .854.353l2.5-2.5a.5.5 0 0 0 0-.707l-2.5-2.5A.5.5 0 0 0 8.636 3.5z"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else if (typeof nearMe !== 'undefined' && nearMe) { %>
+                <!-- No Nearby Groups Found -->
+                <div class="notification-card text-center">
+                    <h3>📍 No groups found near you</h3>
+                    <p class="text-subtitle mb-4">We couldn't find any groups within <%= radius || 25 %>km of your location. Try increasing the search radius or browse all groups.</p>
+                    <div class="flex gap-4 justify-center">
+                        <a href="/" class="btn btn--tech">Return to Home Page</a>
+                        <a href="/search" class="btn btn--outline">Browse All Groups</a>
+                    </div>
+                </div>
+            <% } else if (typeof query !== 'undefined' && query) { %>
+                <!-- No Search Results -->
+                <div class="notification-card text-center">
+                    <h3>No groups found</h3>
+                    <p class="text-subtitle mb-4">We couldn't find any groups matching "<%= query %>". Try adjusting your search terms.</p>
+                    <div class="flex gap-4 justify-center">
+                        <a href="/search" class="btn btn--outline">Clear Search</a>
+                        <a href="/" class="btn btn--tech">Return to Home Page</a>
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- Browse All Groups -->
+                <div class="notification-card text-center">
+                    <h3>Discover Communities</h3>
+                    <p class="text-subtitle mb-4">Browse all groups or use the search above to find specific communities.</p>
+                    <a href="/" class="btn btn--tech">Browse Featured Groups</a>
+                </div>
+            <% } %>
+        </section>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        // Geolocation functionality
+        let userLocation = null;
+        
+        function findNearMe() {
+            const nearMeBtn = document.getElementById('nearMeBtn');
+            
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by this browser.');
+                return;
+            }
+            
+            // Show loading state
+            nearMeBtn.innerHTML = '⏳ Finding your location...';
+            nearMeBtn.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const radius = 25; // Fixed 25km radius
+                    
+                    // Update hidden form fields
+                    document.getElementById('userLat').value = lat;
+                    document.getElementById('userLng').value = lng;
+                    document.getElementById('nearMe').value = 'true';
+                    
+                    // Update form action with radius
+                    const form = document.getElementById('searchForm');
+                    const radiusInput = document.createElement('input');
+                    radiusInput.type = 'hidden';
+                    radiusInput.name = 'radius';
+                    radiusInput.value = radius;
+                    form.appendChild(radiusInput);
+                    
+                    // Submit the form
+                    form.submit();
+                },
+                function(error) {
+                    // Reset button state
+                    nearMeBtn.innerHTML = '📍 Find Groups Near Me';
+                    nearMeBtn.disabled = false;
+                    
+                    let errorMessage = 'Unable to get your location. ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Please allow location access and try again.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Location request timed out.';
+                            break;
+                        default:
+                            errorMessage += 'An unknown error occurred.';
+                            break;
+                    }
+                    alert(errorMessage);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes
+                }
+            );
+        }
+        
+        // Show current location if available
+        <% if (typeof nearMe !== 'undefined' && nearMe && typeof userLat !== 'undefined' && userLat) { %>
+            document.addEventListener('DOMContentLoaded', function() {
+                const nearMeBtn = document.getElementById('nearMeBtn');
+                nearMeBtn.innerHTML = '✅ Showing groups near you';
+                nearMeBtn.classList.add('btn--outline');
+                nearMeBtn.classList.remove('btn--tech');
+            });
+        <% } %>
+    </script>
+</body>
+</html>

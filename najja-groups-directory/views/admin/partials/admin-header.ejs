@@ -1,0 +1,64 @@
+<!-- Admin Header -->
+<header class="admin-header">
+    <nav class="container flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="/admin/dashboard" class="flex items-center gap-2 text-decoration-none">
+                <div class="w-8 h-8 rounded-full" style="background: var(--gradient-accent); display: flex; align-items: center; justify-content: center;">
+                    <span class="text-white font-bold">N</span>
+                </div>
+                <span class="font-bold text-xl">Naija Groups Admin</span>
+            </a>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <a href="/admin/manage-groups" class="admin-nav-link">Manage Groups</a>
+            <a href="/" class="admin-nav-link">View Site</a>
+            
+            <div class="admin-user">
+                <span class="text-sm text-gray-600">Welcome, <strong><%= typeof admin !== 'undefined' ? admin.username : 'Admin' %></strong></span>
+                <a href="/admin/logout" class="btn btn--outline btn--sm ml-3">Logout</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<style>
+    .admin-header {
+        background: white;
+        border-bottom: 1px solid var(--color-border);
+        padding: var(--spacing-4) 0;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .admin-nav-link {
+        color: var(--color-text);
+        text-decoration: none;
+        font-weight: 500;
+        padding: var(--spacing-2) var(--spacing-3);
+        border-radius: var(--border-radius);
+        transition: background-color 0.2s ease;
+    }
+    
+    .admin-nav-link:hover {
+        background-color: var(--color-bg-alt);
+        color: var(--color-primary-600);
+    }
+    
+    .admin-user {
+        display: flex;
+        items-center;
+        gap: var(--spacing-2);
+    }
+    
+    @media (max-width: 768px) {
+        .admin-header nav {
+            flex-direction: column;
+            gap: var(--spacing-4);
+        }
+        
+        .admin-user {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>

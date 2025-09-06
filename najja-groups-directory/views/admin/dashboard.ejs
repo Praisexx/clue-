@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+</head>
+<body>
+    <%- include('partials/admin-header') %>
+
+    <main class="admin-main">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <section class="admin-section">
+                <div class="admin-header">
+                    <h1 class="text-title">Admin Dashboard</h1>
+                    <p class="text-subtitle">Welcome back, <%= admin.username %>!</p>
+                </div>
+            </section>
+
+            <!-- Stats Cards -->
+            <section class="admin-section">
+                <div class="stats-grid">
+                    <div class="stat-card stat-card--pending">
+                        <div class="stat-card__icon">⏳</div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number"><%= stats.pending %></div>
+                            <div class="stat-card__label">Pending Approval</div>
+                        </div>
+                        <a href="/admin/manage-groups?status=pending" class="stat-card__link">View →</a>
+                    </div>
+                    
+                    <div class="stat-card stat-card--approved">
+                        <div class="stat-card__icon">✅</div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number"><%= stats.approved %></div>
+                            <div class="stat-card__label">Approved Groups</div>
+                        </div>
+                        <a href="/admin/manage-groups?status=approved" class="stat-card__link">View →</a>
+                    </div>
+                    
+                    <div class="stat-card stat-card--rejected">
+                        <div class="stat-card__icon">❌</div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number"><%= stats.rejected %></div>
+                            <div class="stat-card__label">Rejected Groups</div>
+                        </div>
+                        <a href="/admin/manage-groups?status=rejected" class="stat-card__link">View →</a>
+                    </div>
+                    
+                    <div class="stat-card stat-card--total">
+                        <div class="stat-card__icon">📊</div>
+                        <div class="stat-card__content">
+                            <div class="stat-card__number"><%= stats.total %></div>
+                            <div class="stat-card__label">Total Groups</div>
+                        </div>
+                        <a href="/admin/manage-groups" class="stat-card__link">View →</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Pending Groups -->
+            <% if (pendingGroups.length > 0) { %>
+                <section class="admin-section">
+                    <div class="section-header">
+                        <h2 class="text-lg font-semibold">Recent Pending Groups</h2>
+                        <a href="/admin/manage-groups?status=pending" class="btn btn--outline">View All</a>
+                    </div>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Group Name</th>
+                                    <th>Location</th>
+                                    <th>Submitted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% pendingGroups.forEach(function(group) { %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= group.name %></strong>
+                                            <div class="text-sm text-gray-500">
+                                                <%= group.description ? group.description.substring(0, 80) + '...' : 'No description' %>
+                                            </div>
+                                        </td>
+                                        <td><%= group.city || group.country || 'Not specified' %></td>
+                                        <td><%= new Date(group.created_at).toLocaleDateString() %></td>
+                                        <td>
+                                            <div class="flex gap-2">
+                                                <form action="/admin/groups/<%= group.id %>/approve" method="POST" style="display: inline;">
+                                                    <button type="submit" class="btn btn--sm btn--success">Approve</button>
+                                                </form>
+                                                <button onclick="showRejectModal(<%= group.id %>, '<%= group.name %>')" class="btn btn--sm btn--danger">Reject</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            <% } else { %>
+                <section class="admin-section">
+                    <div class="notification-card text-center">
+                        <h3>🎉 All caught up!</h3>
+                        <p class="text-subtitle">No pending groups require your attention.</p>
+                    </div>
+                </section>
+            <% } %>
+
+            <!-- Quick Actions -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2 class="text-lg font-semibold">Quick Actions</h2>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="/admin/manage-groups" class="action-card">
+                        <div class="action-card__icon">🏢</div>
+                        <div class="action-card__title">Manage All Groups</div>
+                        <div class="action-card__desc">View, edit, and manage all groups</div>
+                    </a>
+                    
+                    <a href="/" class="action-card">
+                        <div class="action-card__icon">🌐</div>
+                        <div class="action-card__title">View Website</div>
+                        <div class="action-card__desc">See the public website</div>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Reject Group</h3>
+            <p>Are you sure you want to reject "<span id="groupName"></span>"?</p>
+            <form id="rejectForm" action="" method="POST">
+                <div class="form-group">
+                    <label for="reason">Reason for rejection:</label>
+                    <textarea name="reason" id="reason" class="form-input" rows="3" placeholder="Optional reason..."></textarea>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeRejectModal()" class="btn btn--outline">Cancel</button>
+                    <button type="submit" class="btn btn--danger">Reject Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showRejectModal(groupId, groupName) {
+            document.getElementById('groupName').textContent = groupName;
+            document.getElementById('rejectForm').action = '/admin/groups/' + groupId + '/reject';
+            document.getElementById('rejectModal').style.display = 'flex';
+        }
+        
+        function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+        }
+    </script>
+
+    <style>
+        .admin-main {
+            background-color: #f8fafc;
+            min-height: calc(100vh - 80px);
+        }
+        
+        .admin-section {
+            margin-bottom: var(--spacing-8);
+        }
+        
+        .admin-header {
+            text-align: center;
+            margin-bottom: var(--spacing-6);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-4);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-6);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-card__icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-3);
+        }
+        
+        .stat-card__number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-1);
+        }
+        
+        .stat-card__label {
+            color: var(--color-text-light);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--spacing-3);
+        }
+        
+        .stat-card__link {
+            color: var(--color-primary-600);
+            font-size: var(--font-size-sm);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .admin-table-container {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: var(--spacing-4);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .admin-table th {
+            background-color: var(--color-bg-alt);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+        
+        .btn--sm {
+            padding: var(--spacing-1) var(--spacing-3);
+            font-size: var(--font-size-xs);
+        }
+        
+        .btn--success {
+            background-color: #059669;
+            color: white;
+        }
+        
+        .btn--danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-4);
+        }
+        
+        .action-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-6);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .action-card__icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-3);
+        }
+        
+        .action-card__title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-2);
+        }
+        
+        .action-card__desc {
+            color: var(--color-text-light);
+            font-size: var(--font-size-sm);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-6);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-2);
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+        }
+    </style>
+</body>
+</html>

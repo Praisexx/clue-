@@ -16,9 +16,10 @@ exports.getGroupBySlug = async (req, res) => {
         }
 
         // Render the group profile page with the group data
-        res.render('group-profile', {
-            title: `${group.name} - Najja Groups`,
-            group: group
+        res.render('groups/profile', {
+            title: `${group.name} - Naija Groups`,
+            group: group,
+            success: req.query.success === '1'
         });
 
     } catch (error) {

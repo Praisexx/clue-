@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+</head>
+<body>
+    <%- include('partials/admin-header') %>
+
+    <main class="admin-main">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h1 class="text-title">Manage Groups</h1>
+                    
+                    <!-- Status Filter -->
+                    <div class="status-filter">
+                        <a href="/admin/manage-groups" class="filter-btn <%= currentStatus === 'all' ? 'active' : '' %>">
+                            All (<%= groups.length %>)
+                        </a>
+                        <a href="/admin/manage-groups?status=pending" class="filter-btn <%= currentStatus === 'pending' ? 'active' : '' %>">
+                            Pending
+                        </a>
+                        <a href="/admin/manage-groups?status=approved" class="filter-btn <%= currentStatus === 'approved' ? 'active' : '' %>">
+                            Approved
+                        </a>
+                        <a href="/admin/manage-groups?status=rejected" class="filter-btn <%= currentStatus === 'rejected' ? 'active' : '' %>">
+                            Rejected
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Groups Table -->
+            <section class="admin-section">
+                <% if (groups.length > 0) { %>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Group</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Featured</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% groups.forEach(function(group) { %>
+                                    <tr>
+                                        <td>
+                                            <div class="group-info">
+                                                <strong><%= group.name %></strong>
+                                                <div class="text-sm text-gray-500">
+                                                    <%= group.description ? group.description.substring(0, 100) + '...' : 'No description' %>
+                                                </div>
+                                                <% if (group.categories && group.categories.length > 0) { %>
+                                                    <div class="categories">
+                                                        <% group.categories.forEach(function(category) { %>
+                                                            <span class="category-tag"><%= category %></span>
+                                                        <% }); %>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <%= group.city || group.country || 'Not specified' %>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-<%= group.status %>">
+                                                <%= group.status.charAt(0).toUpperCase() + group.status.slice(1) %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button 
+                                                onclick="toggleFeatured(<%= group.id %>, this)"
+                                                class="featured-toggle <%= group.featured ? 'featured' : '' %>"
+                                                title="<%= group.featured ? 'Remove from featured' : 'Add to featured' %>"
+                                            >
+                                                <%= group.featured ? '⭐' : '☆' %>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <%= new Date(group.created_at).toLocaleDateString() %>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <% if (group.status === 'pending') { %>
+                                                    <form action="/admin/groups/<%= group.id %>/approve" method="POST" style="display: inline;">
+                                                        <button type="submit" class="btn btn--sm btn--success">Approve</button>
+                                                    </form>
+                                                    <button onclick="showRejectModal(<%= group.id %>, '<%= group.name.replace(/'/g, "\\'") %>')" class="btn btn--sm btn--danger">Reject</button>
+                                                <% } %>
+                                                
+                                                <a href="/groups/<%= group.slug %>" target="_blank" class="btn btn--sm btn--outline">View</a>
+                                                
+                                                <button onclick="showDeleteModal(<%= group.id %>, '<%= group.name.replace(/'/g, "\\'") %>')" class="btn btn--sm btn--danger">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="notification-card text-center">
+                        <h3>No groups found</h3>
+                        <p class="text-subtitle">
+                            <% if (currentStatus === 'pending') { %>
+                                No groups are currently pending approval.
+                            <% } else if (currentStatus === 'approved') { %>
+                                No groups have been approved yet.
+                            <% } else if (currentStatus === 'rejected') { %>
+                                No groups have been rejected.
+                            <% } else { %>
+                                No groups are available.
+                            <% } %>
+                        </p>
+                    </div>
+                <% } %>
+            </section>
+        </div>
+    </main>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Reject Group</h3>
+            <p>Are you sure you want to reject "<span id="rejectGroupName"></span>"?</p>
+            <form id="rejectForm" action="" method="POST">
+                <div class="form-group">
+                    <label for="rejectReason">Reason for rejection:</label>
+                    <textarea name="reason" id="rejectReason" class="form-input" rows="3" placeholder="Optional reason..."></textarea>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeRejectModal()" class="btn btn--outline">Cancel</button>
+                    <button type="submit" class="btn btn--danger">Reject Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Delete Group</h3>
+            <p>Are you sure you want to permanently delete "<span id="deleteGroupName"></span>"?</p>
+            <p class="text-sm text-gray-600">This action cannot be undone.</p>
+            <form id="deleteForm" action="" method="POST">
+                <input type="hidden" name="_method" value="DELETE">
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeDeleteModal()" class="btn btn--outline">Cancel</button>
+                    <button type="submit" class="btn btn--danger">Delete Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showRejectModal(groupId, groupName) {
+            document.getElementById('rejectGroupName').textContent = groupName;
+            document.getElementById('rejectForm').action = '/admin/groups/' + groupId + '/reject';
+            document.getElementById('rejectModal').style.display = 'flex';
+        }
+        
+        function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+        }
+        
+        function showDeleteModal(groupId, groupName) {
+            document.getElementById('deleteGroupName').textContent = groupName;
+            document.getElementById('deleteForm').action = '/admin/groups/' + groupId + '/delete';
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+        
+        async function toggleFeatured(groupId, button) {
+            try {
+                const response = await fetch(`/admin/groups/${groupId}/featured`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    button.textContent = result.featured ? '⭐' : '☆';
+                    button.classList.toggle('featured', result.featured);
+                    button.title = result.featured ? 'Remove from featured' : 'Add to featured';
+                } else {
+                    alert('Failed to update featured status');
+                }
+            } catch (error) {
+                alert('Error updating featured status');
+            }
+        }
+    </script>
+
+    <style>
+        .admin-main {
+            background-color: #f8fafc;
+            min-height: calc(100vh - 80px);
+            padding-top: var(--spacing-6);
+        }
+        
+        .status-filter {
+            display: flex;
+            gap: var(--spacing-2);
+        }
+        
+        .filter-btn {
+            padding: var(--spacing-2) var(--spacing-4);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background-color: var(--color-primary-500);
+            color: white;
+            border-color: var(--color-primary-500);
+        }
+        
+        .admin-table-container {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: var(--spacing-4);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: top;
+        }
+        
+        .admin-table th {
+            background-color: var(--color-bg-alt);
+            font-weight: 600;
+            color: var(--color-text);
+            position: sticky;
+            top: 0;
+        }
+        
+        .group-info {
+            max-width: 300px;
+        }
+        
+        .categories {
+            margin-top: var(--spacing-2);
+        }
+        
+        .category-tag {
+            display: inline-block;
+            background-color: var(--color-primary-100);
+            color: var(--color-primary-700);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: var(--spacing-1);
+            margin-bottom: 2px;
+        }
+        
+        .status-badge {
+            padding: var(--spacing-1) var(--spacing-3);
+            border-radius: 12px;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-approved {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+        
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .featured-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: var(--spacing-1);
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s ease;
+        }
+        
+        .featured-toggle:hover {
+            background-color: var(--color-bg-alt);
+        }
+        
+        .featured-toggle.featured {
+            color: #f59e0b;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-2);
+            flex-wrap: wrap;
+        }
+        
+        .btn--sm {
+            padding: var(--spacing-1) var(--spacing-3);
+            font-size: var(--font-size-xs);
+        }
+        
+        .btn--success {
+            background-color: #059669;
+            color: white;
+        }
+        
+        .btn--success:hover {
+            background-color: #047857;
+        }
+        
+        .btn--danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        .btn--danger:hover {
+            background-color: #b91c1c;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-6);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-2);
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+        }
+    </style>
+</body>
+</html>

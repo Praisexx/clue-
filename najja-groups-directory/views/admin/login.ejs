@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+</head>
+<body class="admin-login">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="flex items-center justify-center mb-4">
+                    <div class="w-12 h-12 rounded-full" style="background: var(--gradient-accent); display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white font-bold text-xl">N</span>
+                    </div>
+                </div>
+                <h1 class="text-title text-center mb-2">Admin Login</h1>
+                <p class="text-subtitle text-center">Sign in to manage Naija Groups</p>
+            </div>
+            
+            <form action="/admin/login" method="POST" class="login-form">
+                <% if (error) { %>
+                    <div class="alert alert--error mb-4">
+                        <%= error %>
+                    </div>
+                <% } %>
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input" 
+                        placeholder="Enter your username"
+                        required
+                        autofocus
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+                
+                <button type="submit" class="btn btn--tech w-full">
+                    🔑 Sign In
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <a href="/" class="text-sm text-gray-500 hover:text-primary-600">
+                    ← Back to Website
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .admin-login {
+            background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-secondary-500) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-family);
+        }
+        
+        .login-container {
+            padding: var(--spacing-4);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: var(--spacing-8);
+        }
+        
+        .login-header {
+            margin-bottom: var(--spacing-6);
+        }
+        
+        .login-form .form-group {
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .login-form .form-label {
+            display: block;
+            margin-bottom: var(--spacing-2);
+            font-weight: 500;
+            color: var(--color-text);
+        }
+        
+        .login-form .form-input {
+            width: 100%;
+            padding: var(--spacing-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            transition: border-color 0.3s ease;
+        }
+        
+        .login-form .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: var(--spacing-6);
+            padding-top: var(--spacing-4);
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .alert {
+            padding: var(--spacing-3);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+        }
+        
+        .alert--error {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+    </style>
+</body>
+</html>

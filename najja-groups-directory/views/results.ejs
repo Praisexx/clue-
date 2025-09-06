@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <main class="container">
+        <!-- Results Header -->
+        <section class="section">
+            <div class="text-center mb-8">
+                <% if (typeof nearMe !== 'undefined' && nearMe) { %>
+                    <h1 class="text-title mb-4">📍 Groups Near You</h1>
+                    <p class="text-subtitle">Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> within 25km of your location</p>
+                <% } else if (typeof query !== 'undefined' && query) { %>
+                    <h1 class="text-title mb-4">Search Results</h1>
+                    <p class="text-subtitle">Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> for "<%= query %>"</p>
+                <% } else if (typeof category !== 'undefined' && category) { %>
+                    <h1 class="text-title mb-4">🏷️ <%= category.charAt(0).toUpperCase() + category.slice(1) %> Groups</h1>
+                    <p class="text-subtitle">Found <%= resultsCount || results.length %> <%= category %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %></p>
+                <% } else { %>
+                    <h1 class="text-title mb-4">All Groups</h1>
+                    <p class="text-subtitle"><%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> available</p>
+                <% } %>
+                
+                <!-- Quick Actions -->
+                <div class="results-actions mt-6">
+                    <a href="/search" class="btn btn--outline">
+                        🔍 New Search
+                    </a>
+                    <% if (typeof category !== 'undefined' && category) { %>
+                        <a href="/search" class="btn btn--outline">
+                            ✕ Clear Filter
+                        </a>
+                    <% } %>
+                </div>
+                
+                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                    <div class="admin-actions mt-4">
+                        <a href="/admin/dashboard" class="btn btn--outline">
+                            ⚙️ Admin Dashboard
+                        </a>
+                        <a href="/admin/manage-groups" class="btn btn--outline">
+                            📊 Manage Groups
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+            
+        </section>
+
+        <!-- Results Section -->
+        <section class="section">
+            <% if (typeof results !== 'undefined' && results.length > 0) { %>
+                <div class="card-grid-modern">
+                    <% results.forEach(function(group) { %>
+                        <div class="card group-card hover-lift">
+                            <div class="card__body">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="group-card__logo" style="background: var(--gradient-accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
+                                        <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="status-dot status-dot--active"></span>
+                                            <% if (group.featured) { %>
+                                                <span class="chip chip--success">Featured</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h3 class="group-card__title"><%= group.name %></h3>
+                                <p class="group-card__description">
+                                    <%= group.description ? group.description.substring(0, 120) + '...' : 'No description available.' %>
+                                </p>
+                                
+                                <div class="group-card__tags">
+                                    <% if (group.distance !== null && group.distance !== undefined) { %>
+                                        <span class="chip chip--success">📏 <%= group.distance %> km away</span>
+                                    <% } else if (group.city || group.country) { %>
+                                        <span class="chip">📍 <%= group.city || group.country %></span>
+                                    <% } %>
+                                    <% if (group.categories && group.categories.length > 0) { %>
+                                        <span class="chip chip--primary"><%= group.categories[0] %></span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="card__footer">
+                                <a href="/groups/<%= group.slug %>" class="btn btn--tech">
+                                    View Details
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M8.636 3.5a.5.5 0 0 0-.5.5v2h-3a.5.5 0 0 0 0 1h3v2a.5.5 0 0 0 .854.353l2.5-2.5a.5.5 0 0 0 0-.707l-2.5-2.5A.5.5 0 0 0 8.636 3.5z"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <!-- No Results -->
+                <div class="notification-card text-center">
+                    <% if (typeof nearMe !== 'undefined' && nearMe) { %>
+                        <h3>📍 No groups found near you</h3>
+                        <p class="text-subtitle mb-4">We couldn't find any groups within 25km of your location. Try browsing all groups instead.</p>
+                    <% } else if (typeof query !== 'undefined' && query) { %>
+                        <h3>No groups found</h3>
+                        <p class="text-subtitle mb-4">We couldn't find any groups matching "<%= query %>". Try different search terms.</p>
+                    <% } else { %>
+                        <h3>No groups available</h3>
+                        <p class="text-subtitle mb-4">There are currently no groups in the directory.</p>
+                    <% } %>
+                    
+                    <div class="flex gap-4 justify-center">
+                        <a href="/" class="btn btn--tech">← Return Home</a>
+                        <a href="/search" class="btn btn--outline">Browse All Groups</a>
+                    </div>
+                </div>
+            <% } %>
+        </section>
+    </main>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

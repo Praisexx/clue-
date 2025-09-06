@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="container">
+        <!-- Success Message -->
+        <% if (typeof success !== 'undefined' && success) { %>
+            <section class="section">
+                <div class="alert alert--success text-center">
+                    <h3 class="font-semibold mb-2">🎉 Group Successfully Added!</h3>
+                    <p>Your group has been submitted and is now live in our directory. Thank you for joining the Naija Groups community!</p>
+                </div>
+            </section>
+        <% } %>
+
+        <!-- Group Profile Header -->
+        <section class="section">
+            <div class="card">
+                <div class="card__body">
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="group-card__logo" style="width: 120px; height: 120px; background: var(--gradient-accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 3rem;">
+                            <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                        </div>
+                        <div class="flex-1">
+                            <h1 class="text-title mb-2"><%= group.name %></h1>
+                            <div class="flex gap-4 items-center mb-4">
+                                <% if (group.city || group.country) { %>
+                                    <span class="chip">📍 <%= group.city || group.country %></span>
+                                <% } %>
+                                <% if (group.categories && group.categories.length > 0) { %>
+                                    <span class="chip chip--primary"><%= group.categories[0] %></span>
+                                <% } %>
+                                <% if (group.featured) { %>
+                                    <span class="chip chip--success">✨ Featured</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <% if (group.description) { %>
+                        <div class="mb-6">
+                            <h2 class="text-xl font-semibold mb-3">About</h2>
+                            <p class="text-light leading-relaxed"><%= group.description %></p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+
+        <!-- Group Details -->
+        <section class="section">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Contact Information -->
+                <div class="notification-card">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span>📞</span> Contact Information
+                    </h3>
+                    <div class="space-y-3">
+                        <% if (group.email) { %>
+                            <div class="flex items-center gap-3">
+                                <span class="text-primary-500">📧</span>
+                                <a href="mailto:<%= group.email %>" class="text-primary-600 hover:underline"><%= group.email %></a>
+                            </div>
+                        <% } else { %>
+                            <div class="flex items-center gap-3 text-gray-500">
+                                <span>📧</span>
+                                <span>Email not provided</span>
+                            </div>
+                        <% } %>
+                        <% if (group.phone) { %>
+                            <div class="flex items-center gap-3">
+                                <span class="text-primary-500">📞</span>
+                                <a href="tel:<%= group.phone %>" class="text-primary-600 hover:underline"><%= group.phone %></a>
+                            </div>
+                        <% } else { %>
+                            <div class="flex items-center gap-3 text-gray-500">
+                                <span>📞</span>
+                                <span>Phone not provided</span>
+                            </div>
+                        <% } %>
+                        <% if (group.website) { %>
+                            <div class="flex items-center gap-3">
+                                <span class="text-primary-500">🌐</span>
+                                <a href="<%= group.website %>" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Visit Website</a>
+                            </div>
+                        <% } else { %>
+                            <div class="flex items-center gap-3 text-gray-500">
+                                <span>🌐</span>
+                                <span>Website not provided</span>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <div class="notification-card">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span>📍</span> Location
+                    </h3>
+                    <div class="space-y-3">
+                        <% if (group.city) { %>
+                            <div class="flex justify-between">
+                                <span class="text-light">City:</span>
+                                <span class="font-medium"><%= group.city %></span>
+                            </div>
+                        <% } %>
+                        <% if (group.country) { %>
+                            <div class="flex justify-between">
+                                <span class="text-light">Country:</span>
+                                <span class="font-medium"><%= group.country %></span>
+                            </div>
+                        <% } %>
+                        <% if (group.address) { %>
+                            <div>
+                                <span class="text-light block mb-1">Address:</span>
+                                <span class="font-medium"><%= group.address %></span>
+                            </div>
+                        <% } %>
+                        <% if (!group.city && !group.country && !group.address) { %>
+                            <p class="text-gray-500">Location details not provided</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Group Details -->
+                <div class="notification-card">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span>ℹ️</span> Details
+                    </h3>
+                    <div class="space-y-3">
+                        <% if (group.founded_year) { %>
+                            <div class="flex justify-between">
+                                <span class="text-light">Founded:</span>
+                                <span class="font-medium"><%= group.founded_year %></span>
+                            </div>
+                        <% } %>
+                        <% if (group.member_size) { %>
+                            <div class="flex justify-between">
+                                <span class="text-light">Members:</span>
+                                <span class="font-medium"><%= group.member_size %></span>
+                            </div>
+                        <% } %>
+                        <% if (group.membership_type) { %>
+                            <div class="flex justify-between">
+                                <span class="text-light">Type:</span>
+                                <span class="font-medium capitalize"><%= group.membership_type %></span>
+                            </div>
+                        <% } %>
+                        <% if (group.meeting_days && group.meeting_days.length > 0) { %>
+                            <div class="flex justify-between">
+                                <span class="text-light">Meetings:</span>
+                                <span class="font-medium"><%= group.meeting_days.join(', ') %></span>
+                            </div>
+                        <% } %>
+                        <% if (!group.founded_year && !group.member_size && !group.membership_type && (!group.meeting_days || group.meeting_days.length === 0)) { %>
+                            <p class="text-gray-500">Additional details not provided</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories and Tags -->
+        <% if ((group.categories && group.categories.length > 0) || (group.tags && group.tags.length > 0)) { %>
+        <section class="section">
+            <div class="notification-card">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span>🏷️</span> Categories & Tags
+                </h3>
+                <div class="space-y-4">
+                    <% if (group.categories && group.categories.length > 0) { %>
+                        <div>
+                            <span class="text-light block mb-2">Categories:</span>
+                            <div class="flex flex-wrap gap-2">
+                                <% group.categories.forEach(function(category) { %>
+                                    <span class="chip chip--primary"><%= category %></span>
+                                <% }); %>
+                            </div>
+                        </div>
+                    <% } %>
+                    <% if (group.tags && group.tags.length > 0) { %>
+                        <div>
+                            <span class="text-light block mb-2">Tags:</span>
+                            <div class="flex flex-wrap gap-2">
+                                <% group.tags.forEach(function(tag) { %>
+                                    <span class="chip"><%= tag %></span>
+                                <% }); %>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+        <% } %>
+
+        <!-- Contact Form Section -->
+        <section class="section">
+            <div class="notification-card">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span>💬</span> Get in Touch
+                </h3>
+                <p class="text-subtitle mb-6">Have questions about this group? Send them a message!</p>
+                
+                <form class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-modern">
+                            <input type="text" class="input-modern__field" placeholder=" " required>
+                            <label class="input-modern__label">Your Name</label>
+                        </div>
+                        <div class="input-modern">
+                            <input type="email" class="input-modern__field" placeholder=" " required>
+                            <label class="input-modern__label">Your Email</label>
+                        </div>
+                    </div>
+                    <div class="input-modern">
+                        <textarea class="input-modern__field" placeholder=" " rows="4" required style="resize: vertical;"></textarea>
+                        <label class="input-modern__label">Your Message</label>
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="submit" class="btn btn--tech">Send Message</button>
+                        <button type="button" class="btn btn--outline">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Navigation -->
+        <section class="text-center mt-8">
+            <div class="flex gap-4 justify-center">
+                <a href="/" class="btn btn--outline">← Back to Home</a>
+                <a href="/search" class="btn btn--secondary">Browse More Groups</a>
+            </div>
+        </section>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

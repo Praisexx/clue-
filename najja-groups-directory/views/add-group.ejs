@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <main class="container">
+        <!-- Form Header -->
+        <section class="section">
+            <div class="text-center mb-8">
+                <h1 class="text-title mb-4">Add Your Group</h1>
+                <p class="text-subtitle">Join our directory and connect with the Nigerian diaspora community worldwide</p>
+            </div>
+        </section>
+
+        <!-- Error Messages -->
+        <% if (errors && errors.length > 0) { %>
+            <section class="mb-6">
+                <div class="alert alert--warning">
+                    <h3 class="font-semibold mb-2">Please fix the following errors:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <% errors.forEach(function(error) { %>
+                            <li><%= error %></li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </section>
+        <% } %>
+
+        <!-- Add Group Form -->
+        <form action="/add-group" method="POST" class="space-y-8">
+            <!-- Basic Information -->
+            <section class="notification-card">
+                <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                    <span>📝</span> Basic Information
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-modern">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.name || '' %>"
+                            required
+                        >
+                        <label class="input-modern__label">Group Name *</label>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <select name="membership_type" class="input-modern__field" style="color: var(--color-text);">
+                            <option value="">Select membership type</option>
+                            <option value="public" <%= formData.membership_type === 'public' ? 'selected' : '' %>>Public</option>
+                            <option value="private" <%= formData.membership_type === 'private' ? 'selected' : '' %>>Private</option>
+                        </select>
+                        <label class="input-modern__label">Membership Type</label>
+                    </div>
+                </div>
+
+                <div class="input-modern mt-6">
+                    <textarea 
+                        name="description" 
+                        class="input-modern__field" 
+                        placeholder=" " 
+                        rows="4" 
+                        required
+                        style="resize: vertical;"
+                    ><%= formData.description || '' %></textarea>
+                    <label class="input-modern__label">Description *</label>
+                </div>
+            </section>
+
+            <!-- Location Information -->
+            <section class="notification-card">
+                <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                    <span>📍</span> Location Information
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-modern">
+                        <input 
+                            type="text" 
+                            name="city" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.city || '' %>"
+                        >
+                        <label class="input-modern__label">City *</label>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <input 
+                            type="text" 
+                            name="country" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.country || '' %>"
+                        >
+                        <label class="input-modern__label">Country *</label>
+                    </div>
+                </div>
+
+                <div class="input-modern mt-6">
+                    <textarea 
+                        name="address" 
+                        class="input-modern__field" 
+                        placeholder=" " 
+                        rows="2" 
+                        style="resize: vertical;"
+                    ><%= formData.address || '' %></textarea>
+                    <label class="input-modern__label">Full Address (Optional)</label>
+                </div>
+            </section>
+
+            <!-- Contact Information -->
+            <section class="notification-card">
+                <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                    <span>📞</span> Contact Information
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-modern">
+                        <input 
+                            type="email" 
+                            name="email" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.email || '' %>"
+                        >
+                        <label class="input-modern__label">Email Address</label>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <input 
+                            type="tel" 
+                            name="phone" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.phone || '' %>"
+                        >
+                        <label class="input-modern__label">Phone Number</label>
+                    </div>
+                </div>
+
+                <div class="input-modern mt-6">
+                    <input 
+                        type="url" 
+                        name="website" 
+                        class="input-modern__field" 
+                        placeholder=" " 
+                        value="<%= formData.website || '' %>"
+                    >
+                    <label class="input-modern__label">Website (must start with http:// or https://)</label>
+                </div>
+            </section>
+
+            <!-- Group Details -->
+            <section class="notification-card">
+                <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                    <span>ℹ️</span> Additional Details
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-modern">
+                        <input 
+                            type="number" 
+                            name="founded_year" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            min="1800" 
+                            max="<%= new Date().getFullYear() %>"
+                            value="<%= formData.founded_year || '' %>"
+                        >
+                        <label class="input-modern__label">Founded Year</label>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <input 
+                            type="number" 
+                            name="member_size" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            min="1"
+                            value="<%= formData.member_size || '' %>"
+                        >
+                        <label class="input-modern__label">Number of Members</label>
+                    </div>
+                </div>
+
+                <div class="input-modern mt-6">
+                    <input 
+                        type="text" 
+                        name="categories" 
+                        class="input-modern__field" 
+                        placeholder=" " 
+                        value="<%= formData.categories && formData.categories.length ? formData.categories.join(', ') : '' %>"
+                    >
+                    <label class="input-modern__label">Categories (comma-separated: church, cultural, professional, etc.)</label>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-sm font-medium mb-3">Meeting Days (optional)</label>
+                    <div class="flex flex-wrap gap-3">
+                        <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach(function(day) { %>
+                            <label class="flex items-center gap-2">
+                                <input 
+                                    type="checkbox" 
+                                    name="meeting_days" 
+                                    value="<%= day %>"
+                                    <%= (formData.meeting_days && formData.meeting_days.includes(day)) ? 'checked' : '' %>
+                                    class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                                >
+                                <span class="text-sm"><%= day %></span>
+                            </label>
+                        <% }); %>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Actions -->
+            <section class="text-center">
+                <div class="flex gap-4 justify-center">
+                    <button type="submit" class="btn btn--tech">
+                        Submit Group
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8.636 3.5a.5.5 0 0 0-.5.5v2h-3a.5.5 0 0 0 0 1h3v2a.5.5 0 0 0 .854.353l2.5-2.5a.5.5 0 0 0 0-.707l-2.5-2.5A.5.5 0 0 0 8.636 3.5z"/>
+                        </svg>
+                    </button>
+                    <a href="/" class="btn btn--outline">Cancel</a>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">
+                    * Required fields. Your group will be reviewed before being published.
+                </p>
+            </section>
+        </form>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        // Form enhancement script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-format website URLs
+            const websiteInput = document.querySelector('input[name="website"]');
+            if (websiteInput) {
+                websiteInput.addEventListener('blur', function() {
+                    let value = this.value.trim();
+                    if (value && !value.startsWith('http')) {
+                        this.value = 'https://' + value;
+                    }
+                });
+            }
+            
+            // Category suggestions
+            const categoriesInput = document.querySelector('input[name="categories"]');
+            if (categoriesInput) {
+                const suggestions = ['church', 'cultural', 'professional', 'students', 'social', 'business', 'community', 'sports', 'arts', 'medical', 'educational'];
+                
+                // You could implement autocomplete here if needed
+                categoriesInput.setAttribute('title', 'Suggestions: ' + suggestions.join(', '));
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,27 +1,21 @@
-<!-- views/partials/header.ejs - UPDATED -->
-<header class="header">
-    <nav class="nav">
-        <div class="nav-brand">
-            <a href="/" class="logo-link">
-                <h1>🌍 Najja Groups</h1>
+<!-- views/partials/header.ejs -->
+<header class="site-header">
+    <nav class="container flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="/" class="flex items-center gap-2 text-decoration-none">
+                <div class="w-8 h-8 rounded-full" style="background: var(--gradient-accent); display: flex; align-items: center; justify-content: center;">
+                    <span class="text-white font-bold">N</span>
+                </div>
+                <span class="font-bold text-xl">Naija Groups</span>
             </a>
         </div>
         
-        <div class="nav-search">
-            <form action="/search" method="GET" class="search-form">
-                <input 
-                    type="text" 
-                    name="q" 
-                    placeholder="🔍 Search groups, churches, associations..." 
-                    class="search-input"
-                    aria-label="Search for Nigerian diaspora groups"
-                >
-                <button type="submit" class="search-btn">Search</button>
-            </form>
-        </div>
-        
-        <div class="nav-actions">
-            <a href="/groups/add" class="btn-primary">+ Add Group</a>
+        <div class="flex items-center gap-3">
+            <a href="/search" class="btn btn--outline">Explore Groups</a>
+            <a href="/add-group" class="btn btn--tech">+ Add Group</a>
+            <a href="/admin" class="admin-login-btn" title="Admin Login">
+                ⚙️
+            </a>
         </div>
     </nav>
 </header>
