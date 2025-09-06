@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:dribbble.com)",
+      "WebFetch(domain:figma.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

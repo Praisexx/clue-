@@ -1,0 +1,27 @@
+<!-- views/partials/header.ejs - UPDATED -->
+<header class="header">
+    <nav class="nav">
+        <div class="nav-brand">
+            <a href="/" class="logo-link">
+                <h1>🌍 Najja Groups</h1>
+            </a>
+        </div>
+        
+        <div class="nav-search">
+            <form action="/search" method="GET" class="search-form">
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="🔍 Search groups, churches, associations..." 
+                    class="search-input"
+                    aria-label="Search for Nigerian diaspora groups"
+                >
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+        </div>
+        
+        <div class="nav-actions">
+            <a href="/groups/add" class="btn-primary">+ Add Group</a>
+        </div>
+    </nav>
+</header>

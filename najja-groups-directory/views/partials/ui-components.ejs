@@ -1,0 +1,97 @@
+<!-- views/partials/ui-components.ejs -->
+<!-- Loading Spinner -->
+<div class="loading-spinner" style="display: none;">
+  <div class="spinner"></div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Modal Container -->
+<div id="modal-container" class="modal-container"></div>
+
+<!-- Back to Top Button -->
+<button id="back-to-top" class="back-to-top" aria-label="Back to top">
+  ↑
+</button>
+
+<style>
+  .loading-spinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+  }
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--primary-100);
+    border-top: 4px solid var(--primary-600);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: var(--z-tooltip);
+  }
+  
+  .toast {
+    background: var(--gray-800);
+    color: var(--white);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+    animation: slideInLeft 0.3s ease;
+  }
+  
+  .back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: var(--primary-600);
+    color: var(--white);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: all var(--transition-normal);
+    z-index: var(--z-sticky);
+  }
+  
+  .back-to-top.visible {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+</style>
+
+<script>
+// Basic UI JavaScript will go here
+document.addEventListener('DOMContentLoaded', function() {
+  // Back to top button
+  const backToTop = document.getElementById('back-to-top');
+  
+  window.addEventListener('scroll', () => {
+    if (window.pageYOffset > 300) {
+      backToTop.classList.add('visible');
+    } else {
+      backToTop.classList.remove('visible');
+    }
+  });
+  
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>

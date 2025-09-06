@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero__title">Connect with Nigerian Communities Worldwide</h1>
+            <p class="hero__subtitle">Find cultural groups, churches, associations, and more in the diaspora.</p>
+            
+            <!-- Search Bar -->
+            <form action="/search" method="GET" class="search-bar">
+                <input 
+                    type="text" 
+                    name="q" 
+                    class="search-bar__input" 
+                    placeholder="Search by name, category, or location..." 
+                    aria-label="Search groups"
+                >
+                <button type="submit" class="search-bar__button">Search</button>
+            </form>
+        </div>
+    </section>
+
+    <main class="container">
+        <!-- Featured Groups Section -->
+        <section class="mt-6">
+            <h2>Featured Groups</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                <% if (featuredGroups && featuredGroups.length > 0) { %>
+                    <% featuredGroups.forEach(function(group) { %>
+                        <div class="card group-card">
+                            <div class="card__body">
+                                <img 
+                                    src="<%= group.logo_url || '/images/placeholder-group.png' %>" 
+                                    alt="<%= group.name %> logo" 
+                                    class="group-card__logo"
+                                >
+                                <h3 class="group-card__title"><%= group.name %></h3>
+                                <p class="group-card__description">
+                                    <%= group.description ? group.description.substring(0, 100) + '...' : 'No description available.' %>
+                                </p>
+                                <div class="group-card__tags flex gap-2 mt-4">
+                                    <% if (group.categories && group.categories.length > 0) { %>
+                                        <span class="chip chip--primary"><%= group.categories[0] %></span>
+                                    <% } %>
+                                    <% if (group.tags && group.tags.length > 0) { %>
+                                        <span class="chip"><%= group.tags[0] %></span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="card__footer">
+                                <a href="/groups/<%= group.slug %>" class="btn btn--primary">View Details</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="text-light">No featured groups available at the moment.</p>
+                <% } %>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="text-center mt-6 p-6" style="background-color: var(--color-bg-alt); border-radius: var(--border-radius-lg);">
+            <h2>Is your group missing?</h2>
+            <p class="text-light mb-4">Add your organization to our growing directory and connect with the community.</p>
+            <a href="/add-group" class="btn btn--primary">Add Your Group</a>
+        </section>
+    </main>
+
+    <%- include('partials/footer') %>
+</body>
+</html>
