@@ -2,6 +2,10 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 require ('dotenv').config(); // Load environment variables from .env file
+
+// Import database to establish connection
+const pool = require('./config/database');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -39,6 +43,7 @@ app.use('/admin', adminRoutes);
 app.get('/test', (req, res) => {
   res.send('server is running');
 });
+
 //start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

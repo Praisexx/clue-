@@ -1,11 +1,23 @@
 const Group = require('../models/Group');
 
 exports.getGroupBySlug = async (req, res) => {
+    console.log('🚀 GROUP CONTROLLER HIT! Slug:', req.params.slug);
+    
     try {
         const { slug } = req.params;
         
         // Get group by slug from database
         const group = await Group.getBySlug(slug);
+        
+        console.log('🔍 Group Controller Debug:');
+        console.log('Slug:', slug);
+        console.log('Group found:', !!group);
+        if (group) {
+            console.log('Group name:', group.name);
+            console.log('Logo URL field exists:', 'logo_url' in group);
+            console.log('Logo URL value:', group.logo_url);
+            console.log('Logo URL type:', typeof group.logo_url);
+        }
         
         if (!group) {
             // Group not found - render 404 page

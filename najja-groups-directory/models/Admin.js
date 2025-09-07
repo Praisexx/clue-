@@ -2,11 +2,12 @@ const db = require('../config/database');
 const bcrypt = require('bcrypt');
 
 class Admin {
-    static async authenticate(username, password) {
+    static async authenticate(usernameOrEmail, password) {
         try {
+            // Try to find admin by username or email
             const result = await db.query(
-                'SELECT * FROM admin_users WHERE username = $1',
-                [username]
+                'SELECT * FROM admins WHERE username = $1 OR email = $1',
+                [usernameOrEmail]
             );
             
             if (result.rows.length === 0) {
@@ -17,12 +18,6 @@ class Admin {
             const isValid = await bcrypt.compare(password, admin.password_hash);
             
             if (isValid) {
-                // Update last login
-                await db.query(
-                    'UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-                    [admin.id]
-                );
-                
                 // Return admin without password hash
                 const { password_hash, ...adminData } = admin;
                 return adminData;
@@ -36,15 +31,16 @@ class Admin {
     
     static async getPendingGroups() {
         try {
-            const result = await db.query(`
+            const query = `
                 SELECT 
                     id, slug, name, description, city, country, 
-                    categories, email, phone, website, created_at
-                FROM groups 
-                WHERE status = 'pending' 
+                    categories, featured, status, created_at
+                FROM groups
+                WHERE status = 'pending'
                 ORDER BY created_at DESC
-            `);
+            `;
             
+            const result = await db.query(query);
             return result.rows;
         } catch (error) {
             throw new Error('Error fetching pending groups: ' + error.message);
@@ -56,17 +52,17 @@ class Admin {
             let query = `
                 SELECT 
                     id, slug, name, description, city, country, 
-                    categories, status, featured, created_at, approved_at
+                    categories, featured, status, created_at
                 FROM groups
             `;
-            let params = [];
             
+            let params = [];
             if (status) {
-                query += ' WHERE status = $1';
+                query += ` WHERE status = $1`;
                 params.push(status);
             }
             
-            query += ' ORDER BY created_at DESC';
+            query += ` ORDER BY created_at DESC`;
             
             const result = await db.query(query, params);
             return result.rows;
@@ -79,10 +75,10 @@ class Admin {
         try {
             const result = await db.query(`
                 UPDATE groups 
-                SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP
-                WHERE id = $2
+                SET status = 'approved'
+                WHERE id = $1
                 RETURNING *
-            `, [adminId, groupId]);
+            `, [groupId]);
             
             return result.rows[0];
         } catch (error) {
@@ -94,10 +90,10 @@ class Admin {
         try {
             const result = await db.query(`
                 UPDATE groups 
-                SET status = 'rejected', rejection_reason = $1
-                WHERE id = $2
+                SET status = 'rejected'
+                WHERE id = $1
                 RETURNING *
-            `, [reason, groupId]);
+            `, [groupId]);
             
             return result.rows[0];
         } catch (error) {

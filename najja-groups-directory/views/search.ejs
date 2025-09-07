@@ -66,35 +66,45 @@
                 </div>
             </div>
             
-            <!-- Location Search Options -->
-            <div class="text-center mb-8">
-                <button id="nearMeBtn" class="btn btn--tech" onclick="findNearMe()">
-                    📍 Find Groups Near Me
-                </button>
-                
-                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                    <div class="admin-actions mt-4">
-                        <a href="/admin/dashboard" class="btn btn--outline">
-                            ⚙️ Admin Dashboard
-                        </a>
-                        <a href="/admin/manage-groups" class="btn btn--outline">
-                            📊 Manage Groups
-                        </a>
-                    </div>
-                <% } %>
-            </div>
         </section>
 
         <!-- Search Results -->
         <section class="section">
             <% if (typeof results !== 'undefined' && results.length > 0) { %>
+                <!-- Intelligent Search Context -->
+                <% if (typeof searchContext !== 'undefined') { %>
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <% if (searchContext.parsedLocation) { %>
+                            <div class="text-sm text-blue-700 mb-2">
+                                🎯 <strong>Smart Search:</strong> Looking for "<%= searchContext.searchTerms %>" in <strong><%= searchContext.parsedLocation %></strong>
+                            </div>
+                        <% } else if (searchContext.userLocation && searchType === 'location') { %>
+                            <div class="text-sm text-blue-700 mb-2">
+                                📍 <strong>Location-Based Search:</strong> Results near your location
+                                <% if (searchContext.userLocation.city) { %>
+                                    (<%= searchContext.userLocation.city %>, <%= searchContext.userLocation.country %>)
+                                <% } %>
+                                <span class="text-xs">(within <%= searchContext.searchRadius %>km)</span>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+                
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold">
                         <% if (typeof nearMe !== 'undefined' && nearMe) { %>
                             📍 Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> near your location
                             <span class="text-sm text-gray-500 block">(within <%= radius || 25 %> km)</span>
+                        <% } else if (typeof searchContext !== 'undefined' && searchContext.parsedLocation) { %>
+                            🏙️ Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> in <%= searchContext.parsedLocation %>
+                            <% if (searchContext.searchTerms) { %>
+                                <span class="text-sm text-gray-500 block">for "<%= searchContext.searchTerms %>"</span>
+                            <% } %>
                         <% } else if (typeof query !== 'undefined' && query) { %>
                             Found <%= resultsCount || results.length %> group<%= (resultsCount || results.length) === 1 ? '' : 's' %> for "<%= query %>"
+                            <% if (searchType === 'location') { %>
+                                <span class="text-sm text-gray-500 block">📍 Sorted by distance</span>
+                            <% } %>
                         <% } else { %>
                             <%= resultsCount || results.length %> Group<%= (resultsCount || results.length) === 1 ? '' : 's' %> Available
                         <% } %>
@@ -109,18 +119,59 @@
                 </div>
                 
                 <div class="card-grid-modern">
-                    <% results.forEach(function(group) { %>
-                        <div class="card group-card hover-lift">
+                    <% results.forEach(function(group, index) { %>
+                        <div class="card group-card hover-lift fade-in">
                             <div class="card__body">
                                 <div class="flex items-center gap-4 mb-4">
-                                    <div class="group-card__logo" style="background: var(--gradient-accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
-                                        <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                                    <div class="group-card__logo">
+                                        <% 
+                                        // Use realistic stock photos from Unsplash
+                                        var logoNum = ((parseInt(group.id) % 5) + 1);
+                                        var logoPath;
+                                        
+                                        if (group.name && (group.name.includes('Church') || group.name.includes('Christian') || group.name.includes('Christ') || group.name.includes('Redeemed') || group.name.includes('Living Faith') || group.name.includes('Mountain of Fire'))) {
+                                            // Church photos - spiritual/architectural themes
+                                            var churchPhotos = [
+                                                'https://picsum.photos/id/75/400/400',   // Architecture/building
+                                                'https://picsum.photos/id/582/400/400',  // Interior/peaceful
+                                                'https://picsum.photos/id/665/400/400',  // Light/spiritual
+                                                'https://picsum.photos/id/127/400/400',  // Gothic architecture
+                                                'https://picsum.photos/id/250/400/400'   // Serene/contemplative
+                                            ];
+                                            logoPath = churchPhotos[logoNum - 1];
+                                        } else if (group.name && (group.name.includes('University') || group.name.includes('Alumni') || group.name.includes('College') || group.name.includes('School'))) {
+                                            // School photos - educational/academic themes
+                                            var schoolPhotos = [
+                                                'https://picsum.photos/id/159/400/400',  // Books/study
+                                                'https://picsum.photos/id/175/400/400',  // Library/learning
+                                                'https://picsum.photos/id/324/400/400',  // Academic building
+                                                'https://picsum.photos/id/590/400/400',  // Graduation/achievement
+                                                'https://picsum.photos/id/1/400/400'     // Classic academic
+                                            ];
+                                            logoPath = schoolPhotos[logoNum - 1];
+                                        } else {
+                                            // Organization photos - community/business themes
+                                            var orgPhotos = [
+                                                'https://picsum.photos/id/3/400/400',    // Professional/business
+                                                'https://picsum.photos/id/7/400/400',    // Group/community
+                                                'https://picsum.photos/id/15/400/400',   // Collaboration
+                                                'https://picsum.photos/id/25/400/400',   // Modern/corporate
+                                                'https://picsum.photos/id/29/400/400'    // People/networking
+                                            ];
+                                            logoPath = orgPhotos[logoNum - 1];
+                                        }
+                                        %>
+                                        <img src="<%= logoPath %>" alt="<%= group.name %> logo" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div style="width: 60px; height: 60px; border-radius: 8px; background: var(--gradient-accent); display: none; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
+                                            <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                                        </div>
                                     </div>
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-2">
                                             <span class="status-dot status-dot--active"></span>
+                                            <span class="chip chip--success">Active</span>
                                             <% if (group.featured) { %>
-                                                <span class="chip chip--success">Featured</span>
+                                                <span class="chip chip--success">✨ Featured</span>
                                             <% } %>
                                         </div>
                                     </div>

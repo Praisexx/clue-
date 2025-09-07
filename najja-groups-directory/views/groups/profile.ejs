@@ -21,13 +21,53 @@
         <section class="section">
             <div class="card">
                 <div class="card__body">
-                    <div class="flex items-center gap-6 mb-6">
-                        <div class="group-card__logo" style="width: 120px; height: 120px; background: var(--gradient-accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 3rem;">
-                            <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                    <div class="flex items-center gap-10 mb-8">
+                        <div class="group-card__logo">
+                            <% 
+                            // Use realistic stock photos from Unsplash
+                            var logoNum = ((parseInt(group.id) % 5) + 1);
+                            var logoPath;
+                            
+                            if (group.name && (group.name.includes('Church') || group.name.includes('Christian') || group.name.includes('Christ') || group.name.includes('Redeemed') || group.name.includes('Living Faith') || group.name.includes('Mountain of Fire'))) {
+                                // Church photos - spiritual/architectural themes
+                                var churchPhotos = [
+                                    'https://picsum.photos/id/75/400/400',   // Architecture/building
+                                    'https://picsum.photos/id/582/400/400',  // Interior/peaceful
+                                    'https://picsum.photos/id/665/400/400',  // Light/spiritual
+                                    'https://picsum.photos/id/127/400/400',  // Gothic architecture
+                                    'https://picsum.photos/id/250/400/400'   // Serene/contemplative
+                                ];
+                                logoPath = churchPhotos[logoNum - 1];
+                            } else if (group.name && (group.name.includes('University') || group.name.includes('Alumni') || group.name.includes('College') || group.name.includes('School'))) {
+                                // School photos - educational/academic themes
+                                var schoolPhotos = [
+                                    'https://picsum.photos/id/159/400/400',  // Books/study
+                                    'https://picsum.photos/id/175/400/400',  // Library/learning
+                                    'https://picsum.photos/id/324/400/400',  // Academic building
+                                    'https://picsum.photos/id/590/400/400',  // Graduation/achievement
+                                    'https://picsum.photos/id/1/400/400'     // Classic academic
+                                ];
+                                logoPath = schoolPhotos[logoNum - 1];
+                            } else {
+                                // Organization photos - community/business themes
+                                var orgPhotos = [
+                                    'https://picsum.photos/id/3/400/400',    // Professional/business
+                                    'https://picsum.photos/id/7/400/400',    // Group/community
+                                    'https://picsum.photos/id/15/400/400',   // Collaboration
+                                    'https://picsum.photos/id/25/400/400',   // Modern/corporate
+                                    'https://picsum.photos/id/29/400/400'    // People/networking
+                                ];
+                                logoPath = orgPhotos[logoNum - 1];
+                            }
+                            %>
+                            <img src="<%= logoPath %>" alt="<%= group.name %> logo" style="width: 100px; height: 100px; border-radius: 12px; object-fit: cover; border: 2px solid #e5e7eb; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="width: 100px; height: 100px; border-radius: 12px; background: var(--gradient-accent); display: none; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 2rem; border: 2px solid #e5e7eb; flex-shrink: 0;">
+                                <%= group.name ? group.name.charAt(0).toUpperCase() : 'G' %>
+                            </div>
                         </div>
                         <div class="flex-1">
-                            <h1 class="text-title mb-2"><%= group.name %></h1>
-                            <div class="flex gap-4 items-center mb-4">
+                            <h1 class="text-3xl font-bold mb-3 text-gray-900"><%= group.name %></h1>
+                            <div class="flex flex-wrap gap-2 items-center mb-4">
                                 <% if (group.city || group.country) { %>
                                     <span class="chip">📍 <%= group.city || group.country %></span>
                                 <% } %>
@@ -42,9 +82,9 @@
                     </div>
                     
                     <% if (group.description) { %>
-                        <div class="mb-6">
-                            <h2 class="text-xl font-semibold mb-3">About</h2>
-                            <p class="text-light leading-relaxed"><%= group.description %></p>
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-semibold mb-4 text-gray-900">About</h2>
+                            <p class="text-gray-600 leading-relaxed text-lg"><%= group.description %></p>
                         </div>
                     <% } %>
                 </div>

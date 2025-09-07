@@ -39,6 +39,7 @@ function validateGroupData(data) {
 
 exports.getAddGroupForm = async (req, res) => {
     try {
+        console.log('GET /add-group accessed');
         res.render('add-group', {
             title: 'Add Your Group - Naija Groups',
             errors: [],
@@ -46,10 +47,7 @@ exports.getAddGroupForm = async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading add group form:', error);
-        res.status(500).render('error', { 
-            title: 'Form Error',
-            error: 'Unable to load the add group form.' 
-        });
+        res.status(500).send('Unable to load the add group form: ' + error.message);
     }
 };
 
@@ -68,7 +66,8 @@ exports.submitGroup = async (req, res) => {
             founded_year: req.body.founded_year ? parseInt(req.body.founded_year) : null,
             member_size: req.body.member_size ? parseInt(req.body.member_size) : null,
             membership_type: req.body.membership_type?.trim(),
-            meeting_days: req.body.meeting_days ? req.body.meeting_days : []
+            meeting_days: req.body.meeting_days ? req.body.meeting_days : [],
+            logo_url: req.body.logo_url || null // From upload middleware
         };
 
         // Validate the form data
@@ -110,7 +109,10 @@ exports.submitGroup = async (req, res) => {
             membership_type: formData.membership_type,
             meeting_days: formData.meeting_days,
             featured: false, // New groups are not featured by default
-            status: 'pending' // New groups require admin approval
+            status: 'pending', // New groups require admin approval
+            lat: null, // Will be geocoded later if needed
+            lng: null, // Will be geocoded later if needed
+            logo_url: formData.logo_url
         });
 
         // Redirect to a success page instead of the group page (since it's pending)

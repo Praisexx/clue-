@@ -13,10 +13,10 @@
                 <div class="section-header">
                     <h1 class="text-title">Manage Groups</h1>
                     
-                    <!-- Status Filter -->
+                    <!-- Status Filter Buttons -->
                     <div class="status-filter">
                         <a href="/admin/manage-groups" class="filter-btn <%= currentStatus === 'all' ? 'active' : '' %>">
-                            All (<%= groups.length %>)
+                            All Groups (<%= groups.length %>)
                         </a>
                         <a href="/admin/manage-groups?status=pending" class="filter-btn <%= currentStatus === 'pending' ? 'active' : '' %>">
                             Pending
@@ -68,8 +68,16 @@
                                             <%= group.city || group.country || 'Not specified' %>
                                         </td>
                                         <td>
-                                            <span class="status-badge status-<%= group.status %>">
-                                                <%= group.status.charAt(0).toUpperCase() + group.status.slice(1) %>
+                                            <span class="status-badge status-<%= group.status || 'approved' %>">
+                                                <% if (group.status === 'pending') { %>
+                                                    Pending
+                                                <% } else if (group.status === 'approved') { %>
+                                                    Active
+                                                <% } else if (group.status === 'rejected') { %>
+                                                    Rejected
+                                                <% } else { %>
+                                                    Active
+                                                <% } %>
                                             </span>
                                         </td>
                                         <td>

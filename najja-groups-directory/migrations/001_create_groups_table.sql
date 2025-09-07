@@ -1,5 +1,5 @@
--- Enable PostGIS extension for geographic data
-CREATE EXTENSION IF NOT EXISTS postgis;
+-- Enable trigram extension for fuzzy text search  
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Create groups table according to project specification
 CREATE TABLE IF NOT EXISTS groups (
@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS groups (
  country TEXT,
  lat DOUBLE PRECISION, 
  lng DOUBLE PRECISION,
- geom GEOGRAPHY(POINT, 4326),
  phone TEXT, 
  email TEXT, 
  website TEXT,
@@ -33,8 +32,8 @@ CREATE TABLE IF NOT EXISTS groups (
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_groups_geom ON groups USING GIST (geom);
-CREATE INDEX IF NOT EXISTS idx_groups_fts ON groups USING GIN (to_tsvector('simple', coalesce(name,'')||' '||coalesce(array_to_string(categories,' '), '')||' '||coalesce(array_to_string(tags,' '), '')));
+-- Create full-text search index (simplified version)
+CREATE INDEX IF NOT EXISTS idx_groups_name_search ON groups USING GIN (to_tsvector('english', name));
 CREATE INDEX IF NOT EXISTS idx_groups_trgm ON groups USING GIN (name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_groups_featured ON groups (featured);
 CREATE INDEX IF NOT EXISTS idx_groups_slug ON groups (slug);
