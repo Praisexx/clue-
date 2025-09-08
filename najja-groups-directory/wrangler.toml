@@ -1,0 +1,5 @@
+name = "najja-groups-directory"
+compatibility_date = "2024-01-15"
+
+[env.production]
+name = "najja-groups-directory-prod"
