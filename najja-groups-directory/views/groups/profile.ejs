@@ -2,6 +2,99 @@
 <html lang="en">
 <head>
     <%- include('../partials/head') %>
+    
+    <!-- Structured Data - Organization Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "<%= group.name %>",
+        <% if (group.description) { %>
+        "description": "<%= group.description.replace(/"/g, '\\"') %>",
+        <% } %>
+        <% if (group.logo_url) { %>
+        "logo": "<%= group.logo_url %>",
+        <% } %>
+        <% if (group.website) { %>
+        "url": "<%= group.website %>",
+        <% } %>
+        "address": {
+            "@type": "PostalAddress",
+            <% if (group.address) { %>
+            "streetAddress": "<%= group.address.replace(/"/g, '\\"') %>",
+            <% } %>
+            <% if (group.city) { %>
+            "addressLocality": "<%= group.city %>",
+            <% } %>
+            <% if (group.country) { %>
+            "addressCountry": "<%= group.country %>"
+            <% } %>
+        },
+        <% if (group.phone || group.email) { %>
+        "contactPoint": {
+            "@type": "ContactPoint",
+            <% if (group.phone) { %>
+            "telephone": "<%= group.phone %>",
+            <% } %>
+            <% if (group.email) { %>
+            "email": "<%= group.email %>",
+            <% } %>
+            "contactType": "General Inquiry"
+        },
+        <% } %>
+        <% if (group.facebook_url || group.instagram_url || group.twitter_url || group.linkedin_url || group.youtube_url) { %>
+        "sameAs": [
+            <% var socialLinks = []; %>
+            <% if (group.facebook_url) socialLinks.push('"' + group.facebook_url + '"'); %>
+            <% if (group.instagram_url) socialLinks.push('"' + group.instagram_url + '"'); %>
+            <% if (group.twitter_url) socialLinks.push('"' + group.twitter_url + '"'); %>
+            <% if (group.linkedin_url) socialLinks.push('"' + group.linkedin_url + '"'); %>
+            <% if (group.youtube_url) socialLinks.push('"' + group.youtube_url + '"'); %>
+            <%- socialLinks.join(', ') %>
+        ],
+        <% } %>
+        <% if (group.founded_year) { %>
+        "foundingDate": "<%= group.founded_year %>",
+        <% } %>
+        <% if (group.member_size) { %>
+        "numberOfEmployees": "<%= group.member_size %>",
+        <% } %>
+        <% if (group.categories && group.categories.length > 0) { %>
+        "keywords": "<%= group.categories.join(', ') %>",
+        <% } %>
+        "memberOf": {
+            "@type": "Organization",
+            "name": "Naija Groups Directory",
+            "url": "<%= process.env.SITE_URL || 'http://localhost:3000' %>"
+        }
+    }
+    </script>
+
+    <!-- Enhanced Meta Tags for SEO -->
+    <meta property="og:title" content="<%= group.name %> - Nigerian Diaspora Group">
+    <meta property="og:description" content="<%= group.description ? group.description.substring(0, 160) + (group.description.length > 160 ? '...' : '') : 'Connect with ' + group.name + ' - a Nigerian diaspora organization.' %>">
+    <meta property="og:type" content="organization">
+    <meta property="og:url" content="<%= process.env.SITE_URL || 'http://localhost:3000' %>/groups/<%= group.slug %>">
+    <% if (group.logo_url) { %>
+    <meta property="og:image" content="<%= group.logo_url %>">
+    <% } %>
+    <meta property="og:site_name" content="Naija Groups Directory">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="<%= group.name %> - Nigerian Diaspora Group">
+    <meta name="twitter:description" content="<%= group.description ? group.description.substring(0, 200) + (group.description.length > 200 ? '...' : '') : 'Connect with ' + group.name + ' - a Nigerian diaspora organization.' %>">
+    <% if (group.logo_url) { %>
+    <meta name="twitter:image" content="<%= group.logo_url %>">
+    <% } %>
+    
+    <!-- Additional SEO Meta -->
+    <meta name="description" content="<%= group.description ? group.description.substring(0, 160) + (group.description.length > 160 ? '...' : '') : 'Connect with ' + group.name + ' - a Nigerian diaspora organization based in ' + (group.city || group.country || 'Nigeria') + '.' %>">
+    <% if (group.categories && group.categories.length > 0) { %>
+    <meta name="keywords" content="<%= group.categories.join(', ') %>, Nigerian diaspora, Nigerian community, <%= group.city || group.country %>">
+    <% } %>
+    <meta name="author" content="<%= group.name %>">
+    <link rel="canonical" href="<%= process.env.SITE_URL || 'http://localhost:3000' %>/groups/<%= group.slug %>">
 </head>
 <body>
     <%- include('../partials/header') %>
@@ -24,40 +117,46 @@
                     <div class="flex items-center gap-10 mb-8">
                         <div class="group-card__logo">
                             <% 
-                            // Use realistic stock photos from Unsplash
-                            var logoNum = ((parseInt(group.id) % 5) + 1);
                             var logoPath;
                             
-                            if (group.name && (group.name.includes('Church') || group.name.includes('Christian') || group.name.includes('Christ') || group.name.includes('Redeemed') || group.name.includes('Living Faith') || group.name.includes('Mountain of Fire'))) {
-                                // Church photos - spiritual/architectural themes
-                                var churchPhotos = [
-                                    'https://picsum.photos/id/75/400/400',   // Architecture/building
-                                    'https://picsum.photos/id/582/400/400',  // Interior/peaceful
-                                    'https://picsum.photos/id/665/400/400',  // Light/spiritual
-                                    'https://picsum.photos/id/127/400/400',  // Gothic architecture
-                                    'https://picsum.photos/id/250/400/400'   // Serene/contemplative
-                                ];
-                                logoPath = churchPhotos[logoNum - 1];
-                            } else if (group.name && (group.name.includes('University') || group.name.includes('Alumni') || group.name.includes('College') || group.name.includes('School'))) {
-                                // School photos - educational/academic themes
-                                var schoolPhotos = [
-                                    'https://picsum.photos/id/159/400/400',  // Books/study
-                                    'https://picsum.photos/id/175/400/400',  // Library/learning
-                                    'https://picsum.photos/id/324/400/400',  // Academic building
-                                    'https://picsum.photos/id/590/400/400',  // Graduation/achievement
-                                    'https://picsum.photos/id/1/400/400'     // Classic academic
-                                ];
-                                logoPath = schoolPhotos[logoNum - 1];
+                            // Priority 1: User uploaded image
+                            if (group.logo_url && group.logo_url.trim()) {
+                                logoPath = group.logo_url;
                             } else {
-                                // Organization photos - community/business themes
-                                var orgPhotos = [
-                                    'https://picsum.photos/id/3/400/400',    // Professional/business
-                                    'https://picsum.photos/id/7/400/400',    // Group/community
-                                    'https://picsum.photos/id/15/400/400',   // Collaboration
-                                    'https://picsum.photos/id/25/400/400',   // Modern/corporate
-                                    'https://picsum.photos/id/29/400/400'    // People/networking
-                                ];
-                                logoPath = orgPhotos[logoNum - 1];
+                                // Priority 2: Fallback to themed stock photos
+                                var logoNum = ((parseInt(group.id) % 5) + 1);
+                                
+                                if (group.name && (group.name.includes('Church') || group.name.includes('Christian') || group.name.includes('Christ') || group.name.includes('Redeemed') || group.name.includes('Living Faith') || group.name.includes('Mountain of Fire'))) {
+                                    // Church photos - spiritual/architectural themes
+                                    var churchPhotos = [
+                                        'https://picsum.photos/id/75/400/400',   // Architecture/building
+                                        'https://picsum.photos/id/582/400/400',  // Interior/peaceful
+                                        'https://picsum.photos/id/665/400/400',  // Light/spiritual
+                                        'https://picsum.photos/id/127/400/400',  // Gothic architecture
+                                        'https://picsum.photos/id/250/400/400'   // Serene/contemplative
+                                    ];
+                                    logoPath = churchPhotos[logoNum - 1];
+                                } else if (group.name && (group.name.includes('University') || group.name.includes('Alumni') || group.name.includes('College') || group.name.includes('School'))) {
+                                    // School photos - educational/academic themes
+                                    var schoolPhotos = [
+                                        'https://picsum.photos/id/159/400/400',  // Books/study
+                                        'https://picsum.photos/id/175/400/400',  // Library/learning
+                                        'https://picsum.photos/id/324/400/400',  // Academic building
+                                        'https://picsum.photos/id/590/400/400',  // Graduation/achievement
+                                        'https://picsum.photos/id/1/400/400'     // Classic academic
+                                    ];
+                                    logoPath = schoolPhotos[logoNum - 1];
+                                } else {
+                                    // Organization photos - community/business themes
+                                    var orgPhotos = [
+                                        'https://picsum.photos/id/3/400/400',    // Professional/business
+                                        'https://picsum.photos/id/7/400/400',    // Group/community
+                                        'https://picsum.photos/id/15/400/400',   // Collaboration
+                                        'https://picsum.photos/id/25/400/400',   // Modern/corporate
+                                        'https://picsum.photos/id/29/400/400'    // People/networking
+                                    ];
+                                    logoPath = orgPhotos[logoNum - 1];
+                                }
                             }
                             %>
                             <img src="<%= logoPath %>" alt="<%= group.name %> logo" style="width: 100px; height: 100px; border-radius: 12px; object-fit: cover; border: 2px solid #e5e7eb; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -103,7 +202,11 @@
                         <% if (group.email) { %>
                             <div class="flex items-center gap-3">
                                 <span class="text-primary-500">📧</span>
-                                <a href="mailto:<%= group.email %>" class="text-primary-600 hover:underline"><%= group.email %></a>
+                                <a href="mailto:<%= group.email %>" 
+                                   class="text-primary-600 hover:underline"
+                                   onclick="trackClick('email', 'mailto:<%= group.email %>')">
+                                    <%= group.email %>
+                                </a>
                             </div>
                         <% } else { %>
                             <div class="flex items-center gap-3 text-gray-500">
@@ -114,7 +217,11 @@
                         <% if (group.phone) { %>
                             <div class="flex items-center gap-3">
                                 <span class="text-primary-500">📞</span>
-                                <a href="tel:<%= group.phone %>" class="text-primary-600 hover:underline"><%= group.phone %></a>
+                                <a href="tel:<%= group.phone %>" 
+                                   class="text-primary-600 hover:underline"
+                                   onclick="trackClick('phone', 'tel:<%= group.phone %>')">
+                                    <%= group.phone %>
+                                </a>
                             </div>
                         <% } else { %>
                             <div class="flex items-center gap-3 text-gray-500">
@@ -125,7 +232,13 @@
                         <% if (group.website) { %>
                             <div class="flex items-center gap-3">
                                 <span class="text-primary-500">🌐</span>
-                                <a href="<%= group.website %>" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Visit Website</a>
+                                <a href="<%= group.website %>" 
+                                   target="_blank" 
+                                   rel="noopener" 
+                                   class="text-primary-600 hover:underline"
+                                   onclick="trackClick('website', '<%= group.website %>')">
+                                    Visit Website
+                                </a>
                             </div>
                         <% } else { %>
                             <div class="flex items-center gap-3 text-gray-500">
@@ -133,6 +246,101 @@
                                 <span>Website not provided</span>
                             </div>
                         <% } %>
+                        <% if (group.whatsapp_phone) { %>
+                            <div class="flex items-center gap-3">
+                                <span class="text-primary-500">💬</span>
+                                <a href="https://wa.me/<%= group.whatsapp_phone.replace(/[^\d]/g, '') %>?text=Hello!%20I%20found%20your%20group%20%22<%= encodeURIComponent(group.name) %>%22%20on%20Naija%20Groups%20and%20would%20like%20to%20learn%20more%20about%20joining.%20Thank%20you!" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   class="whatsapp-button whatsapp-button--small"
+                                   onclick="trackClick('whatsapp', 'https://wa.me/<%= group.whatsapp_phone.replace(/[^\d]/g, '') %>')">
+                                    <svg class="whatsapp-icon" viewBox="0 0 24 24">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                                    </svg>
+                                    WhatsApp
+                                </a>
+                            </div>
+                        <% } %>
+                        
+                        <!-- Social Media Links -->
+                        <% if (group.facebook_url || group.instagram_url || group.twitter_url || group.linkedin_url || group.youtube_url) { %>
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">Follow Us</h4>
+                            <div class="flex flex-wrap gap-3">
+                                <% if (group.facebook_url) { %>
+                                <a href="<%= group.facebook_url %>" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   class="social-link social-link--facebook" 
+                                   title="Facebook"
+                                   onclick="trackClick('facebook', '<%= group.facebook_url %>')">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                </a>
+                                <% } %>
+                                
+                                <% if (group.instagram_url) { %>
+                                <a href="<%= group.instagram_url %>" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   class="social-link social-link--instagram" 
+                                   title="Instagram"
+                                   onclick="trackClick('instagram', '<%= group.instagram_url %>')">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                    </svg>
+                                </a>
+                                <% } %>
+                                
+                                <% if (group.twitter_url) { %>
+                                <a href="<%= group.twitter_url %>" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   class="social-link social-link--twitter" 
+                                   title="Twitter/X"
+                                   onclick="trackClick('twitter', '<%= group.twitter_url %>')">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                                    </svg>
+                                </a>
+                                <% } %>
+                                
+                                <% if (group.linkedin_url) { %>
+                                <a href="<%= group.linkedin_url %>" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   class="social-link social-link--linkedin" 
+                                   title="LinkedIn"
+                                   onclick="trackClick('linkedin', '<%= group.linkedin_url %>')">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                    </svg>
+                                </a>
+                                <% } %>
+                                
+                                <% if (group.youtube_url) { %>
+                                <a href="<%= group.youtube_url %>" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   class="social-link social-link--youtube" 
+                                   title="YouTube"
+                                   onclick="trackClick('youtube', '<%= group.youtube_url %>')">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                </a>
+                                <% } %>
+                            </div>
+                        </div>
+                        <% } %>
+                        
+                        <!-- Contact Button -->
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <button id="openContactModal" class="btn btn--primary btn--full-width">
+                                <span>✉️</span> Contact This Group
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -237,36 +445,149 @@
         </section>
         <% } %>
 
-        <!-- Contact Form Section -->
+        <!-- Image Gallery -->
+        <% if (galleryImages && galleryImages.length > 0) { %>
         <section class="section">
             <div class="notification-card">
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <span>💬</span> Get in Touch
+                    <span>🖼️</span> Photo Gallery
                 </h3>
-                <p class="text-subtitle mb-6">Have questions about this group? Send them a message!</p>
                 
-                <form class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="input-modern">
-                            <input type="text" class="input-modern__field" placeholder=" " required>
-                            <label class="input-modern__label">Your Name</label>
+                <div class="gallery-grid">
+                    <% galleryImages.forEach(function(image, index) { %>
+                        <div class="gallery-item" data-index="<%= index %>">
+                            <div class="gallery-image-container">
+                                <img 
+                                    src="<%= image.image_url %>" 
+                                    alt="<%= image.caption || group.name + ' photo' %>"
+                                    class="gallery-image"
+                                    loading="lazy"
+                                    onclick="openGalleryModal(<%= index %>)"
+                                >
+                                <div class="gallery-overlay">
+                                    <div class="gallery-expand-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <% if (image.caption) { %>
+                                <p class="gallery-caption"><%= image.caption %></p>
+                            <% } %>
                         </div>
-                        <div class="input-modern">
-                            <input type="email" class="input-modern__field" placeholder=" " required>
-                            <label class="input-modern__label">Your Email</label>
-                        </div>
-                    </div>
-                    <div class="input-modern">
-                        <textarea class="input-modern__field" placeholder=" " rows="4" required style="resize: vertical;"></textarea>
-                        <label class="input-modern__label">Your Message</label>
-                    </div>
-                    <div class="flex gap-4">
-                        <button type="submit" class="btn btn--tech">Send Message</button>
-                        <button type="button" class="btn btn--outline">Cancel</button>
-                    </div>
-                </form>
+                    <% }); %>
+                </div>
             </div>
         </section>
+
+        <!-- Gallery Modal -->
+        <div id="galleryModal" class="gallery-modal">
+            <div class="gallery-modal__backdrop" onclick="closeGalleryModal()"></div>
+            <div class="gallery-modal__content">
+                <button class="gallery-modal__close" onclick="closeGalleryModal()" type="button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+                
+                <button class="gallery-modal__prev" onclick="previousImage()" type="button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+                
+                <button class="gallery-modal__next" onclick="nextImage()" type="button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+                
+                <div class="gallery-modal__image-container">
+                    <img id="galleryModalImage" src="" alt="" class="gallery-modal__image">
+                </div>
+                
+                <div class="gallery-modal__info">
+                    <p id="galleryModalCaption" class="gallery-modal__caption"></p>
+                    <p class="gallery-modal__counter">
+                        <span id="galleryCurrentIndex">1</span> / <span id="galleryTotalImages"><%= galleryImages.length %></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Contact Modal -->
+        <div id="contactModal" class="modal">
+            <div class="modal__backdrop" id="modalBackdrop"></div>
+            <div class="modal__content">
+                <div class="modal__header">
+                    <h3 class="modal__title">Contact <%= group.name %></h3>
+                    <button class="modal__close" id="closeModal" type="button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="modal__body">
+                    <div id="contactSuccess" class="alert alert--success" style="display: none;">
+                        <h4>Message Sent Successfully! ✅</h4>
+                        <p>Your message has been sent to <%= group.name %>. They will get back to you soon.</p>
+                    </div>
+                    
+                    <div id="contactError" class="alert alert--error" style="display: none;">
+                        <h4>Error Sending Message ❌</h4>
+                        <p id="contactErrorMessage">Something went wrong. Please try again.</p>
+                    </div>
+                    
+                    <form id="contactForm" class="space-y-4">
+                        <input type="hidden" name="groupId" value="<%= group.id %>">
+                        <input type="hidden" name="groupName" value="<%= group.name %>">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="input-modern">
+                                <input type="text" name="name" class="input-modern__field" placeholder=" " required>
+                                <label class="input-modern__label">Your Name *</label>
+                            </div>
+                            <div class="input-modern">
+                                <input type="email" name="email" class="input-modern__field" placeholder=" " required>
+                                <label class="input-modern__label">Your Email *</label>
+                            </div>
+                        </div>
+                        
+                        <div class="input-modern">
+                            <input type="tel" name="phone" class="input-modern__field" placeholder=" ">
+                            <label class="input-modern__label">Phone Number (Optional)</label>
+                        </div>
+                        
+                        <div class="input-modern">
+                            <textarea name="message" class="input-modern__field" placeholder=" " rows="5" required style="resize: vertical;"></textarea>
+                            <label class="input-modern__label">Your Message *</label>
+                        </div>
+                        
+                        <!-- reCAPTCHA placeholder -->
+                        <div class="captcha-container">
+                            <div class="captcha-placeholder">
+                                <div class="captcha-checkbox">
+                                    <input type="checkbox" id="captchaCheck" required>
+                                    <label for="captchaCheck">I'm not a robot</label>
+                                </div>
+                                <div class="captcha-logo">reCAPTCHA</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4 justify-end">
+                            <button type="button" class="btn btn--outline" id="cancelContact">Cancel</button>
+                            <button type="submit" class="btn btn--primary" id="submitContact">
+                                <span id="submitText">Send Message</span>
+                                <span id="submitLoading" style="display: none;">Sending...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         <!-- Navigation -->
         <section class="text-center mt-8">
@@ -278,5 +599,211 @@
     </main>
 
     <%- include('../partials/footer') %>
+    
+    <!-- Analytics and Contact Modal JavaScript -->
+    <script>
+        // Analytics tracking function
+        function trackClick(clickType, targetUrl) {
+            // Track click analytics
+            fetch('/api/track/click', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    groupId: <%= group.id %>,
+                    clickType: clickType,
+                    targetUrl: targetUrl
+                })
+            }).catch(err => console.warn('Analytics tracking failed:', err));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('contactModal');
+            const openBtn = document.getElementById('openContactModal');
+            const closeBtn = document.getElementById('closeModal');
+            const cancelBtn = document.getElementById('cancelContact');
+            const backdrop = document.getElementById('modalBackdrop');
+            const contactForm = document.getElementById('contactForm');
+            const submitBtn = document.getElementById('submitContact');
+            const submitText = document.getElementById('submitText');
+            const submitLoading = document.getElementById('submitLoading');
+            const successAlert = document.getElementById('contactSuccess');
+            const errorAlert = document.getElementById('contactError');
+            const errorMessage = document.getElementById('contactErrorMessage');
+
+            // Open modal
+            if (openBtn) {
+                openBtn.addEventListener('click', function() {
+                    modal.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                    // Focus on first input after animation
+                    setTimeout(() => {
+                        const firstInput = contactForm.querySelector('input[name="name"]');
+                        if (firstInput) firstInput.focus();
+                    }, 300);
+                });
+            }
+
+            // Close modal function
+            function closeModal() {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                // Reset form and alerts
+                contactForm.reset();
+                successAlert.style.display = 'none';
+                errorAlert.style.display = 'none';
+                submitText.style.display = 'inline';
+                submitLoading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+
+            // Close modal events
+            [closeBtn, cancelBtn, backdrop].forEach(element => {
+                if (element) {
+                    element.addEventListener('click', closeModal);
+                }
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'block') {
+                    closeModal();
+                }
+            });
+
+            // Form submission
+            if (contactForm) {
+                contactForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    // Check CAPTCHA
+                    const captchaCheck = document.getElementById('captchaCheck');
+                    if (!captchaCheck.checked) {
+                        errorMessage.textContent = 'Please verify that you are not a robot.';
+                        errorAlert.style.display = 'block';
+                        return;
+                    }
+
+                    // Hide alerts
+                    successAlert.style.display = 'none';
+                    errorAlert.style.display = 'none';
+
+                    // Show loading state
+                    submitText.style.display = 'none';
+                    submitLoading.style.display = 'inline';
+                    submitBtn.disabled = true;
+
+                    try {
+                        const formData = new FormData(contactForm);
+                        const response = await fetch('/api/contact', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                groupId: formData.get('groupId'),
+                                groupName: formData.get('groupName'),
+                                name: formData.get('name'),
+                                email: formData.get('email'),
+                                phone: formData.get('phone'),
+                                message: formData.get('message')
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            successAlert.style.display = 'block';
+                            contactForm.reset();
+                            captchaCheck.checked = false;
+                            // Auto close after 3 seconds
+                            setTimeout(() => {
+                                closeModal();
+                            }, 3000);
+                        } else {
+                            throw new Error(result.error || 'Failed to send message');
+                        }
+
+                    } catch (error) {
+                        console.error('Contact form error:', error);
+                        errorMessage.textContent = error.message || 'Failed to send message. Please try again.';
+                        errorAlert.style.display = 'block';
+                    } finally {
+                        // Reset loading state
+                        submitText.style.display = 'inline';
+                        submitLoading.style.display = 'none';
+                        submitBtn.disabled = false;
+                    }
+                });
+            }
+        });
+
+        // Gallery Modal JavaScript
+        <% if (galleryImages && galleryImages.length > 0) { %>
+        const galleryImages = <%- JSON.stringify(galleryImages) %>;
+        let currentGalleryIndex = 0;
+
+        function openGalleryModal(index) {
+            currentGalleryIndex = index;
+            updateGalleryModal();
+            document.getElementById('galleryModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGalleryModal() {
+            document.getElementById('galleryModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function nextImage() {
+            currentGalleryIndex = (currentGalleryIndex + 1) % galleryImages.length;
+            updateGalleryModal();
+        }
+
+        function previousImage() {
+            currentGalleryIndex = currentGalleryIndex === 0 ? galleryImages.length - 1 : currentGalleryIndex - 1;
+            updateGalleryModal();
+        }
+
+        function updateGalleryModal() {
+            const currentImage = galleryImages[currentGalleryIndex];
+            const modalImage = document.getElementById('galleryModalImage');
+            const modalCaption = document.getElementById('galleryModalCaption');
+            const currentIndexSpan = document.getElementById('galleryCurrentIndex');
+
+            modalImage.src = currentImage.image_url;
+            modalImage.alt = currentImage.caption || '<%= group.name %> photo';
+            modalCaption.textContent = currentImage.caption || '';
+            currentIndexSpan.textContent = currentGalleryIndex + 1;
+
+            // Hide/show navigation arrows based on single image
+            const prevBtn = document.querySelector('.gallery-modal__prev');
+            const nextBtn = document.querySelector('.gallery-modal__next');
+            
+            if (galleryImages.length === 1) {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            } else {
+                prevBtn.style.display = 'flex';
+                nextBtn.style.display = 'flex';
+            }
+        }
+
+        // Keyboard navigation for gallery
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('galleryModal');
+            if (modal.style.display === 'block') {
+                if (e.key === 'Escape') {
+                    closeGalleryModal();
+                } else if (e.key === 'ArrowLeft') {
+                    previousImage();
+                } else if (e.key === 'ArrowRight') {
+                    nextImage();
+                }
+            }
+        });
+        <% } %>
+    </script>
 </body>
 </html>

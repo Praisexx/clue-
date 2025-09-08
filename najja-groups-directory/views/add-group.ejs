@@ -173,6 +173,18 @@
 
                 <div class="input-modern mt-6">
                     <input 
+                        type="tel" 
+                        name="whatsapp_phone" 
+                        class="input-modern__field" 
+                        placeholder=" " 
+                        value="<%= formData.whatsapp_phone || '' %>"
+                    >
+                    <label class="input-modern__label">WhatsApp Business Number (with country code, e.g., +234901234567)</label>
+                    <small class="input-help">This will allow users to contact your group directly via WhatsApp</small>
+                </div>
+
+                <div class="input-modern mt-6">
+                    <input 
                         type="url" 
                         name="website" 
                         class="input-modern__field" 
@@ -180,6 +192,73 @@
                         value="<%= formData.website || '' %>"
                     >
                     <label class="input-modern__label">Website (must start with http:// or https://)</label>
+                </div>
+            </section>
+
+            <!-- Social Media Links -->
+            <section class="notification-card">
+                <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                    <span>📱</span> Social Media Links
+                </h3>
+                <p class="text-subtitle mb-6">Help people find and connect with your group on social media platforms (all optional)</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-modern">
+                        <input 
+                            type="url" 
+                            name="facebook_url" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.facebook_url || '' %>"
+                        >
+                        <label class="input-modern__label">Facebook Page/Profile URL</label>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <input 
+                            type="url" 
+                            name="instagram_url" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.instagram_url || '' %>"
+                        >
+                        <label class="input-modern__label">Instagram Profile URL</label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="input-modern">
+                        <input 
+                            type="url" 
+                            name="twitter_url" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.twitter_url || '' %>"
+                        >
+                        <label class="input-modern__label">Twitter/X Profile URL</label>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <input 
+                            type="url" 
+                            name="linkedin_url" 
+                            class="input-modern__field" 
+                            placeholder=" " 
+                            value="<%= formData.linkedin_url || '' %>"
+                        >
+                        <label class="input-modern__label">LinkedIn Page/Profile URL</label>
+                    </div>
+                </div>
+
+                <div class="input-modern mt-6">
+                    <input 
+                        type="url" 
+                        name="youtube_url" 
+                        class="input-modern__field" 
+                        placeholder=" " 
+                        value="<%= formData.youtube_url || '' %>"
+                    >
+                    <label class="input-modern__label">YouTube Channel URL</label>
                 </div>
             </section>
 
@@ -224,7 +303,7 @@
                         placeholder=" " 
                         value="<%= formData.categories && formData.categories.length ? formData.categories.join(', ') : '' %>"
                     >
-                    <label class="input-modern__label">Categories (comma-separated: church, cultural, professional, etc.)</label>
+                    <label class="input-modern__label">Categories (comma-separated: anything you want!)</label>
                 </div>
 
                 <div class="mt-6">
@@ -280,13 +359,10 @@
                 });
             }
             
-            // Category suggestions
+            // Categories are completely open - users can add any category they want
             const categoriesInput = document.querySelector('input[name="categories"]');
             if (categoriesInput) {
-                const suggestions = ['church', 'cultural', 'professional', 'students', 'social', 'business', 'community', 'sports', 'arts', 'medical', 'educational'];
-                
-                // You could implement autocomplete here if needed
-                categoriesInput.setAttribute('title', 'Suggestions: ' + suggestions.join(', '));
+                categoriesInput.setAttribute('title', 'Enter any categories you want, separated by commas');
             }
             
             // Logo upload preview

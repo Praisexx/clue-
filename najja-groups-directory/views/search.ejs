@@ -2,6 +2,88 @@
 <html lang="en">
 <head>
     <%- include('partials/head') %>
+    
+    <!-- Structured Data for Search Results -->
+    <% if (results && results.length > 0) { %>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "<%= query ? 'Search results for \"' + query + '\"' : 'Nigerian Diaspora Groups Search Results' %>",
+        "description": "Search results for Nigerian diaspora organizations and community groups",
+        "numberOfItems": <%= results.length %>,
+        "itemListElement": [
+            <% results.slice(0, 10).forEach(function(group, index) { %>
+            {
+                "@type": "ListItem",
+                "position": <%= index + 1 %>,
+                "item": {
+                    "@type": "Organization",
+                    "name": "<%= group.name.replace(/"/g, '\\"') %>",
+                    "url": "<%= process.env.SITE_URL || 'http://localhost:3000' %>/groups/<%= group.slug %>",
+                    <% if (group.description) { %>
+                    "description": "<%= group.description.replace(/"/g, '\\"').substring(0, 200) %>",
+                    <% } %>
+                    <% if (group.city || group.country) { %>
+                    "address": {
+                        "@type": "PostalAddress",
+                        <% if (group.city) { %>
+                        "addressLocality": "<%= group.city %>",
+                        <% } %>
+                        <% if (group.country) { %>
+                        "addressCountry": "<%= group.country %>"
+                        <% } %>
+                    },
+                    <% } %>
+                    <% if (group.categories && group.categories.length > 0) { %>
+                    "keywords": "<%= group.categories.join(', ') %>"
+                    <% } %>
+                }
+            }<% if (index < Math.min(results.length - 1, 9)) { %>,<% } %>
+            <% }); %>
+        ]
+    }
+    </script>
+    <% } %>
+    
+    <!-- BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "<%= process.env.SITE_URL || 'http://localhost:3000' %>"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Search",
+                "item": "<%= process.env.SITE_URL || 'http://localhost:3000' %>/search<%= query ? '?q=' + encodeURIComponent(query) : '' %>"
+            }
+        ]
+    }
+    </script>
+    
+    <!-- Enhanced Meta Tags -->
+    <meta name="description" content="<%= query ? 'Search results for \"' + query + '\" in Nigerian diaspora groups and organizations. Found ' + results.length + ' matching communities.' : 'Search Nigerian diaspora groups, organizations, and community groups worldwide.' %>">
+    <meta name="keywords" content="<%= query ? query + ', ' : '' %>Nigerian diaspora, search groups, Nigerian communities, organizations, churches, associations">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="<%= query ? 'Search: ' + query + ' - Naija Groups Directory' : 'Search Groups - Naija Groups Directory' %>">
+    <meta property="og:description" content="<%= query ? 'Found ' + results.length + ' Nigerian diaspora groups for \"' + query + '\"' : 'Search and discover Nigerian diaspora organizations worldwide' %>">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= process.env.SITE_URL || 'http://localhost:3000' %>/search<%= query ? '?q=' + encodeURIComponent(query) : '' %>">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="<%= query ? 'Search: ' + query + ' - Naija Groups' : 'Search Groups - Naija Groups' %>">
+    <meta name="twitter:description" content="<%= query ? 'Found ' + results.length + ' results' : 'Discover Nigerian diaspora communities' %>">
+    
+    <link rel="canonical" href="<%= process.env.SITE_URL || 'http://localhost:3000' %>/search<%= query ? '?q=' + encodeURIComponent(query) : '' %>">
 </head>
 <body>
     <%- include('partials/header') %>
@@ -16,51 +98,196 @@
             
             <!-- Search Form -->
             <div class="flex justify-center">
-                <form action="/search" method="GET" class="search-bar mb-8" id="searchForm" style="max-width: 600px; width: 100%;">
-                    <input 
-                        type="text" 
-                        name="q" 
-                        class="search-bar__input" 
-                        placeholder="Search by group name, category, or location..." 
-                        value="<%= typeof query !== 'undefined' ? query : '' %>"
-                        aria-label="Search groups"
-                    >
-                    <button type="submit" class="search-bar__button">Search</button>
+                <div style="max-width: 600px; width: 100%;">
+                    <form action="/search" method="GET" class="search-bar mb-4" id="searchForm">
+                        <input 
+                            type="text" 
+                            name="q" 
+                            class="search-bar__input" 
+                            placeholder="Try: 'tennis club', 'church in Lagos', or 'Redeemed Christian Church'..." 
+                            value="<%= typeof query !== 'undefined' ? query : '' %>"
+                            aria-label="Search groups"
+                            id="searchInput"
+                        >
+                        <button type="submit" class="search-bar__button">Search</button>
+                        
+                        <!-- Hidden fields for location data -->
+                        <input type="hidden" name="lat" id="userLat" value="<%= typeof userLat !== 'undefined' ? userLat : '' %>">
+                        <input type="hidden" name="lng" id="userLng" value="<%= typeof userLng !== 'undefined' ? userLng : '' %>">
+                        <input type="hidden" name="near_me" id="nearMe" value="false">
+                    </form>
                     
-                    <!-- Hidden fields for location data -->
-                    <input type="hidden" name="lat" id="userLat" value="<%= typeof userLat !== 'undefined' ? userLat : '' %>">
-                    <input type="hidden" name="lng" id="userLng" value="<%= typeof userLng !== 'undefined' ? userLng : '' %>">
-                    <input type="hidden" name="near_me" id="nearMe" value="false">
-                </form>
+                    <!-- Quick action buttons -->
+                    <div class="flex justify-center gap-3 mb-6">
+                        <button 
+                            id="nearMeBtn" 
+                            class="btn btn--tech btn--small"
+                            onclick="findNearMe()"
+                        >
+                            📍 Near Me
+                        </button>
+                        <button 
+                            id="voiceSearchBtn" 
+                            class="btn btn--outline btn--small"
+                            onclick="startVoiceSearch()"
+                            style="display: none;"
+                        >
+                            🎤 Voice Search
+                        </button>
+                    </div>
+                    
+                    <!-- Location status -->
+                    <div id="locationStatus" class="text-center text-sm text-gray-500 mb-4" style="display: none;"></div>
+                    
+                    <!-- Search examples -->
+                    <div class="text-center text-xs text-gray-400 mb-4">
+                        <strong>Search Examples:</strong> 
+                        <button class="search-example" onclick="setSearch('church')">church</button> • 
+                        <button class="search-example" onclick="setSearch('fitness in Lagos')">fitness in Lagos</button> • 
+                        <button class="search-example" onclick="setSearch(\'&quot;Mountain of Fire&quot;\')">exact name</button>
+                    </div>
+                </div>
             </div>
             
-            <!-- Category Filter -->
+            <!-- Advanced Filters -->
+            <div class="advanced-filters mb-8">
+                <div class="text-center mb-4">
+                    <button id="toggleFilters" class="btn btn--outline btn--small">
+                        🔍 Advanced Filters
+                    </button>
+                </div>
+                
+                <div id="filtersPanel" class="filters-panel" style="display: none;">
+                    <form id="advancedSearchForm" action="/search" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Preserve original query -->
+                        <input type="hidden" name="q" value="<%= typeof query !== 'undefined' ? query : '' %>">
+                        
+                        <div class="filter-group">
+                            <label for="categoryFilter" class="filter-label">Category</label>
+                            <select name="category" id="categoryFilter" class="filter-select">
+                                <option value="">All Categories</option>
+                                <% if (typeof allCategories !== 'undefined' && allCategories.length > 0) { %>
+                                    <% allCategories.forEach(function(cat) { %>
+                                        <option value="<%= cat.toLowerCase() %>" <%= category && category.toLowerCase() === cat.toLowerCase() ? 'selected' : '' %>>
+                                            <%= cat %>
+                                        </option>
+                                    <% }); %>
+                                <% } %>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="meetingDayFilter" class="filter-label">Meeting Day</label>
+                            <select name="meeting_day" id="meetingDayFilter" class="filter-select">
+                                <option value="">Any Day</option>
+                                <option value="Sunday" <%= meetingDay === 'Sunday' ? 'selected' : '' %>>Sunday</option>
+                                <option value="Monday" <%= meetingDay === 'Monday' ? 'selected' : '' %>>Monday</option>
+                                <option value="Tuesday" <%= meetingDay === 'Tuesday' ? 'selected' : '' %>>Tuesday</option>
+                                <option value="Wednesday" <%= meetingDay === 'Wednesday' ? 'selected' : '' %>>Wednesday</option>
+                                <option value="Thursday" <%= meetingDay === 'Thursday' ? 'selected' : '' %>>Thursday</option>
+                                <option value="Friday" <%= meetingDay === 'Friday' ? 'selected' : '' %>>Friday</option>
+                                <option value="Saturday" <%= meetingDay === 'Saturday' ? 'selected' : '' %>>Saturday</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="membershipTypeFilter" class="filter-label">Membership</label>
+                            <select name="membership_type" id="membershipTypeFilter" class="filter-select">
+                                <option value="">Any Type</option>
+                                <option value="public" <%= membershipType === 'public' ? 'selected' : '' %>>Public</option>
+                                <option value="private" <%= membershipType === 'private' ? 'selected' : '' %>>Private</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="cityFilter" class="filter-label">City</label>
+                            <input type="text" name="city" id="cityFilter" class="filter-input" 
+                                   placeholder="e.g., Lagos, Abuja" value="<%= typeof city !== 'undefined' ? city : '' %>">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="countryFilter" class="filter-label">Country</label>
+                            <input type="text" name="country" id="countryFilter" class="filter-input" 
+                                   placeholder="e.g., Nigeria, USA" value="<%= typeof country !== 'undefined' ? country : '' %>">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="sortFilter" class="filter-label">Sort By</label>
+                            <select name="sort" id="sortFilter" class="filter-select">
+                                <option value="relevance" <%= sortBy === 'relevance' ? 'selected' : '' %>>Relevance</option>
+                                <option value="distance" <%= sortBy === 'distance' ? 'selected' : '' %>>Distance</option>
+                                <option value="name" <%= sortBy === 'name' ? 'selected' : '' %>>Name A-Z</option>
+                                <option value="newest" <%= sortBy === 'newest' ? 'selected' : '' %>>Newest</option>
+                                <option value="views" <%= sortBy === 'views' ? 'selected' : '' %>>Most Popular</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group md:col-span-2 lg:col-span-1">
+                            <label class="filter-label">Options</label>
+                            <div class="flex flex-col gap-2">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="verified" value="true" <%= verified === true ? 'checked' : '' %>>
+                                    <span class="checkmark"></span>
+                                    Verified Groups Only
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="featured" value="true" <%= featured === true ? 'checked' : '' %>>
+                                    <span class="checkmark"></span>
+                                    Featured Groups Only
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="radiusFilter" class="filter-label">Search Radius (km)</label>
+                            <select name="radius" id="radiusFilter" class="filter-select">
+                                <option value="10" <%= radius === 10 ? 'selected' : '' %>>10 km</option>
+                                <option value="25" <%= radius === 25 ? 'selected' : '' %>>25 km</option>
+                                <option value="50" <%= radius === 50 ? 'selected' : '' %>>50 km</option>
+                                <option value="100" <%= radius === 100 ? 'selected' : '' %>>100 km</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-actions md:col-span-2 lg:col-span-3 flex gap-3 justify-center">
+                            <button type="submit" class="btn btn--primary">Apply Filters</button>
+                            <button type="button" onclick="clearFilters()" class="btn btn--outline">Clear All</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Category Filter (Quick Access) -->
             <div class="filter-section mb-8">
                 <div class="flex justify-center">
                     <div class="category-filter">
-                        <label class="filter-label">Filter by Category:</label>
+                        <label class="filter-label">Quick Category Filter:</label>
                         <div class="category-buttons">
                             <a href="/search" class="category-btn <%= (typeof category === 'undefined' || category === '') ? 'active' : '' %>">
                                 All
                             </a>
-                            <a href="/search?category=religious" class="category-btn <%= category === 'religious' ? 'active' : '' %>">
-                                Religious
-                            </a>
-                            <a href="/search?category=cultural" class="category-btn <%= category === 'cultural' ? 'active' : '' %>">
-                                Cultural
-                            </a>
-                            <a href="/search?category=professional" class="category-btn <%= category === 'professional' ? 'active' : '' %>">
-                                Professional
-                            </a>
-                            <a href="/search?category=student" class="category-btn <%= category === 'student' || category === 'students' ? 'active' : '' %>">
-                                Students
-                            </a>
-                            <a href="/search?category=social" class="category-btn <%= category === 'social' ? 'active' : '' %>">
-                                Social
-                            </a>
-                            <a href="/search?category=community" class="category-btn <%= category === 'community' ? 'active' : '' %>">
-                                Community
-                            </a>
+                            <% if (typeof allCategories !== 'undefined' && allCategories.length > 0) { %>
+                                <% allCategories.slice(0, 8).forEach(function(cat) { %>
+                                    <a href="/search?category=<%= encodeURIComponent(cat.toLowerCase()) %>" 
+                                       class="category-btn <%= category && category.toLowerCase() === cat.toLowerCase() ? 'active' : '' %>">
+                                        <%= cat %>
+                                    </a>
+                                <% }); %>
+                                <% if (allCategories.length > 8) { %>
+                                    <div class="category-dropdown">
+                                        <button class="category-btn dropdown-toggle">
+                                            More... ▼
+                                        </button>
+                                        <div class="dropdown-content">
+                                            <% allCategories.slice(8).forEach(function(cat) { %>
+                                                <a href="/search?category=<%= encodeURIComponent(cat.toLowerCase()) %>" 
+                                                   class="<%= category && category.toLowerCase() === cat.toLowerCase() ? 'active' : '' %>">
+                                                    <%= cat %>
+                                                </a>
+                                            <% }); %>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -72,19 +299,62 @@
         <section class="section">
             <% if (typeof results !== 'undefined' && results.length > 0) { %>
                 <!-- Intelligent Search Context -->
-                <% if (typeof searchContext !== 'undefined') { %>
+                <% if (typeof searchContext !== 'undefined' && searchContext.searchIntent) { %>
                     <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <% if (searchContext.parsedLocation) { %>
+                        <% if (searchContext.searchIntent.intent === 'exact_name') { %>
                             <div class="text-sm text-blue-700 mb-2">
-                                🎯 <strong>Smart Search:</strong> Looking for "<%= searchContext.searchTerms %>" in <strong><%= searchContext.parsedLocation %></strong>
+                                🎯 <strong>Exact Name Search:</strong> Looking for groups named "<%= searchContext.searchIntent.cleanQuery %>"
+                                <div class="text-xs text-blue-600 mt-1">Tip: Try using quotes for better exact matching</div>
                             </div>
-                        <% } else if (searchContext.userLocation && searchType === 'location') { %>
+                        <% } else if (searchContext.searchIntent.intent === 'location_specific') { %>
+                            <div class="text-sm text-blue-700 mb-2">
+                                🏙️ <strong>Location Search:</strong> Looking for "<%= searchContext.searchIntent.cleanQuery %>" in <strong><%= searchContext.searchIntent.location %></strong>
+                                <% if (searchContext.searchRadius) { %>
+                                    <div class="text-xs text-blue-600 mt-1">Searching within <%= searchContext.searchRadius %>km radius</div>
+                                <% } %>
+                            </div>
+                        <% } else if (searchContext.searchIntent.intent === 'category_nearby') { %>
+                            <div class="text-sm text-blue-700 mb-2">
+                                🏷️ <strong>Category Search:</strong> Looking for "<%= searchContext.searchIntent.cleanQuery %>" near your location
+                                <% if (searchContext.userLocation && searchContext.userLocation.city) { %>
+                                    <div class="text-xs text-blue-600 mt-1">Near <%= searchContext.userLocation.city %>, <%= searchContext.userLocation.country %> (within <%= searchContext.searchRadius || 25 %>km)</div>
+                                <% } %>
+                            </div>
+                            <!-- Show suggestions if available -->
+                            <% if (searchContext.searchIntent.suggestions && searchContext.searchIntent.suggestions.length > 0) { %>
+                                <div class="mt-3">
+                                    <div class="text-xs text-blue-600 mb-1">Related searches:</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <% searchContext.searchIntent.suggestions.forEach(function(suggestion) { %>
+                                            <a href="/search?q=<%= encodeURIComponent(suggestion) %>" 
+                                               class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded hover:bg-blue-200 transition-colors">
+                                                <%= suggestion %>
+                                            </a>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                            <% } %>
+                        <% } else if (searchContext.userLocation && (searchType === 'location' || searchType === 'category_location')) { %>
                             <div class="text-sm text-blue-700 mb-2">
                                 📍 <strong>Location-Based Search:</strong> Results near your location
                                 <% if (searchContext.userLocation.city) { %>
                                     (<%= searchContext.userLocation.city %>, <%= searchContext.userLocation.country %>)
                                 <% } %>
-                                <span class="text-xs">(within <%= searchContext.searchRadius %>km)</span>
+                                <span class="text-xs">(within <%= searchContext.searchRadius || 25 %>km)</span>
+                            </div>
+                        <% } %>
+                        
+                        <!-- Search confidence indicator -->
+                        <% if (searchContext.searchIntent.confidence) { %>
+                            <div class="mt-2 text-xs text-blue-600">
+                                Search confidence: 
+                                <% if (searchContext.searchIntent.confidence >= 0.8) { %>
+                                    <span class="font-semibold text-green-600">High</span> ✅
+                                <% } else if (searchContext.searchIntent.confidence >= 0.6) { %>
+                                    <span class="font-semibold text-yellow-600">Medium</span> ⚡
+                                <% } else { %>
+                                    <span class="font-semibold text-gray-600">Basic</span> 🔍
+                                <% } %>
                             </div>
                         <% } %>
                     </div>
@@ -125,40 +395,46 @@
                                 <div class="flex items-center gap-4 mb-4">
                                     <div class="group-card__logo">
                                         <% 
-                                        // Use realistic stock photos from Unsplash
-                                        var logoNum = ((parseInt(group.id) % 5) + 1);
                                         var logoPath;
                                         
-                                        if (group.name && (group.name.includes('Church') || group.name.includes('Christian') || group.name.includes('Christ') || group.name.includes('Redeemed') || group.name.includes('Living Faith') || group.name.includes('Mountain of Fire'))) {
-                                            // Church photos - spiritual/architectural themes
-                                            var churchPhotos = [
-                                                'https://picsum.photos/id/75/400/400',   // Architecture/building
-                                                'https://picsum.photos/id/582/400/400',  // Interior/peaceful
-                                                'https://picsum.photos/id/665/400/400',  // Light/spiritual
-                                                'https://picsum.photos/id/127/400/400',  // Gothic architecture
-                                                'https://picsum.photos/id/250/400/400'   // Serene/contemplative
-                                            ];
-                                            logoPath = churchPhotos[logoNum - 1];
-                                        } else if (group.name && (group.name.includes('University') || group.name.includes('Alumni') || group.name.includes('College') || group.name.includes('School'))) {
-                                            // School photos - educational/academic themes
-                                            var schoolPhotos = [
-                                                'https://picsum.photos/id/159/400/400',  // Books/study
-                                                'https://picsum.photos/id/175/400/400',  // Library/learning
-                                                'https://picsum.photos/id/324/400/400',  // Academic building
-                                                'https://picsum.photos/id/590/400/400',  // Graduation/achievement
-                                                'https://picsum.photos/id/1/400/400'     // Classic academic
-                                            ];
-                                            logoPath = schoolPhotos[logoNum - 1];
+                                        // Priority 1: User uploaded image
+                                        if (group.logo_url && group.logo_url.trim()) {
+                                            logoPath = group.logo_url;
                                         } else {
-                                            // Organization photos - community/business themes
-                                            var orgPhotos = [
-                                                'https://picsum.photos/id/3/400/400',    // Professional/business
-                                                'https://picsum.photos/id/7/400/400',    // Group/community
-                                                'https://picsum.photos/id/15/400/400',   // Collaboration
-                                                'https://picsum.photos/id/25/400/400',   // Modern/corporate
-                                                'https://picsum.photos/id/29/400/400'    // People/networking
-                                            ];
-                                            logoPath = orgPhotos[logoNum - 1];
+                                            // Priority 2: Fallback to themed stock photos
+                                            var logoNum = ((parseInt(group.id) % 5) + 1);
+                                            
+                                            if (group.name && (group.name.includes('Church') || group.name.includes('Christian') || group.name.includes('Christ') || group.name.includes('Redeemed') || group.name.includes('Living Faith') || group.name.includes('Mountain of Fire'))) {
+                                                // Church photos - spiritual/architectural themes
+                                                var churchPhotos = [
+                                                    'https://picsum.photos/id/75/400/400',   // Architecture/building
+                                                    'https://picsum.photos/id/582/400/400',  // Interior/peaceful
+                                                    'https://picsum.photos/id/665/400/400',  // Light/spiritual
+                                                    'https://picsum.photos/id/127/400/400',  // Gothic architecture
+                                                    'https://picsum.photos/id/250/400/400'   // Serene/contemplative
+                                                ];
+                                                logoPath = churchPhotos[logoNum - 1];
+                                            } else if (group.name && (group.name.includes('University') || group.name.includes('Alumni') || group.name.includes('College') || group.name.includes('School'))) {
+                                                // School photos - educational/academic themes
+                                                var schoolPhotos = [
+                                                    'https://picsum.photos/id/159/400/400',  // Books/study
+                                                    'https://picsum.photos/id/175/400/400',  // Library/learning
+                                                    'https://picsum.photos/id/324/400/400',  // Academic building
+                                                    'https://picsum.photos/id/590/400/400',  // Graduation/achievement
+                                                    'https://picsum.photos/id/1/400/400'     // Classic academic
+                                                ];
+                                                logoPath = schoolPhotos[logoNum - 1];
+                                            } else {
+                                                // Organization photos - community/business themes
+                                                var orgPhotos = [
+                                                    'https://picsum.photos/id/3/400/400',    // Professional/business
+                                                    'https://picsum.photos/id/7/400/400',    // Group/community
+                                                    'https://picsum.photos/id/15/400/400',   // Collaboration
+                                                    'https://picsum.photos/id/25/400/400',   // Modern/corporate
+                                                    'https://picsum.photos/id/29/400/400'    // People/networking
+                                                ];
+                                                logoPath = orgPhotos[logoNum - 1];
+                                            }
                                         }
                                         %>
                                         <img src="<%= logoPath %>" alt="<%= group.name %> logo" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -305,6 +581,117 @@
             );
         }
         
+        // Enhanced search functionality
+        function setSearch(query) {
+            document.getElementById('searchInput').value = query;
+            document.getElementById('searchForm').submit();
+        }
+        
+        // Voice search functionality (if supported)
+        function startVoiceSearch() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert('Voice search is not supported in your browser. Please try Chrome.');
+                return;
+            }
+            
+            const recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            const voiceBtn = document.getElementById('voiceSearchBtn');
+            voiceBtn.innerHTML = '🎤 Listening...';
+            voiceBtn.disabled = true;
+            
+            recognition.onresult = function(event) {
+                const result = event.results[0][0].transcript;
+                document.getElementById('searchInput').value = result;
+                document.getElementById('searchForm').submit();
+            };
+            
+            recognition.onerror = function(event) {
+                voiceBtn.innerHTML = '🎤 Voice Search';
+                voiceBtn.disabled = false;
+                alert('Voice search error: ' + event.error);
+            };
+            
+            recognition.onend = function() {
+                voiceBtn.innerHTML = '🎤 Voice Search';
+                voiceBtn.disabled = false;
+            };
+            
+            recognition.start();
+        }
+        
+        // Show voice search button if supported
+        document.addEventListener('DOMContentLoaded', function() {
+            if ('webkitSpeechRecognition' in window) {
+                document.getElementById('voiceSearchBtn').style.display = 'inline-block';
+            }
+            
+            // Add search examples styling
+            const styles = document.createElement('style');
+            styles.textContent = `
+                .search-example {
+                    background: none;
+                    border: none;
+                    color: #6366f1;
+                    cursor: pointer;
+                    text-decoration: none;
+                    font-size: inherit;
+                    padding: 0;
+                }
+                .search-example:hover {
+                    color: #4f46e5;
+                }
+                .btn--small {
+                    padding: 0.5rem 1rem;
+                    font-size: 0.875rem;
+                }
+                
+                /* Category dropdown styles */
+                .category-dropdown {
+                    position: relative;
+                    display: inline-block;
+                }
+                
+                .dropdown-content {
+                    display: none;
+                    position: absolute;
+                    background-color: white;
+                    min-width: 160px;
+                    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                    z-index: 1;
+                    border-radius: 8px;
+                    border: 1px solid #e5e7eb;
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+                
+                .dropdown-content a {
+                    color: #374151;
+                    padding: 12px 16px;
+                    text-decoration: none;
+                    display: block;
+                    font-size: 0.875rem;
+                }
+                
+                .dropdown-content a:hover {
+                    background-color: #f3f4f6;
+                }
+                
+                .dropdown-content a.active {
+                    background-color: #10b981;
+                    color: white;
+                }
+                
+                .category-dropdown:hover .dropdown-content {
+                    display: block;
+                }
+            `;
+            document.head.appendChild(styles);
+        });
+        
         // Show current location if available
         <% if (typeof nearMe !== 'undefined' && nearMe && typeof userLat !== 'undefined' && userLat) { %>
             document.addEventListener('DOMContentLoaded', function() {
@@ -314,6 +701,150 @@
                 nearMeBtn.classList.remove('btn--tech');
             });
         <% } %>
+        
+        // Advanced Filters Toggle
+        function toggleFilters() {
+            const panel = document.getElementById('filtersPanel');
+            const button = document.getElementById('toggleFilters');
+            
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+                button.innerHTML = '🔼 Hide Filters';
+            } else {
+                panel.style.display = 'none';
+                button.innerHTML = '🔍 Advanced Filters';
+            }
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            const form = document.getElementById('advancedSearchForm');
+            const inputs = form.querySelectorAll('input[type="text"], select, input[type="checkbox"]');
+            
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else {
+                    input.value = '';
+                }
+            });
+            
+            // Reset to default values
+            document.getElementById('sortFilter').value = 'relevance';
+            document.getElementById('radiusFilter').value = '25';
+            
+            // Submit the form to clear filters
+            form.submit();
+        }
+        
+        // Search suggestions functionality
+        let suggestionsTimeout;
+        function setupSearchSuggestions() {
+            const searchInput = document.getElementById('searchInput');
+            let suggestionContainer;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(suggestionsTimeout);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    hideSuggestions();
+                    return;
+                }
+                
+                suggestionsTimeout = setTimeout(() => {
+                    fetchSuggestions(query);
+                }, 300);
+            });
+            
+            searchInput.addEventListener('blur', function() {
+                setTimeout(hideSuggestions, 150);
+            });
+            
+            function fetchSuggestions(query) {
+                fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(suggestions => {
+                        showSuggestions(suggestions);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching suggestions:', error);
+                    });
+            }
+            
+            function showSuggestions(suggestions) {
+                hideSuggestions();
+                
+                if (suggestions.length === 0) return;
+                
+                suggestionContainer = document.createElement('div');
+                suggestionContainer.className = 'search-suggestions';
+                
+                suggestions.forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.textContent = suggestion;
+                    item.addEventListener('click', () => {
+                        searchInput.value = suggestion;
+                        hideSuggestions();
+                        document.getElementById('searchForm').submit();
+                    });
+                    suggestionContainer.appendChild(item);
+                });
+                
+                searchInput.parentNode.appendChild(suggestionContainer);
+            }
+            
+            function hideSuggestions() {
+                if (suggestionContainer) {
+                    suggestionContainer.remove();
+                    suggestionContainer = null;
+                }
+            }
+        }
+
+        // Enhanced search input with smart suggestions
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const locationStatus = document.getElementById('locationStatus');
+            const toggleBtn = document.getElementById('toggleFilters');
+            
+            // Setup event listeners
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleFilters);
+            }
+            
+            // Setup search suggestions
+            setupSearchSuggestions();
+            
+            // Show location status if geolocation is supported
+            if (navigator.geolocation) {
+                locationStatus.style.display = 'block';
+                locationStatus.textContent = 'Tip: Click "Near Me" for location-based results';
+            }
+            
+            // Add input event listener for real-time feedback
+            searchInput.addEventListener('input', function() {
+                const value = this.value.toLowerCase();
+                let feedback = '';
+                
+                if (value.includes(' in ')) {
+                    feedback = '🏙️ Location search detected';
+                } else if (value.startsWith('"') || value.endsWith('"')) {
+                    feedback = '🎯 Exact name search mode';
+                } else if (value.includes('church') || value.includes('gym') || value.includes('school')) {
+                    feedback = '🏷️ Category search - try "Near Me" for local results';
+                }
+                
+                if (feedback) {
+                    locationStatus.style.display = 'block';
+                    locationStatus.innerHTML = feedback;
+                    locationStatus.style.color = '#6366f1';
+                } else {
+                    locationStatus.style.display = 'none';
+                }
+            });
+        });
     </script>
 </body>
 </html>

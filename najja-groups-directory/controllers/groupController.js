@@ -1,4 +1,5 @@
 const Group = require('../models/Group');
+const AnalyticsService = require('../services/analyticsService');
 
 exports.getGroupBySlug = async (req, res) => {
     console.log('🚀 GROUP CONTROLLER HIT! Slug:', req.params.slug);
@@ -27,10 +28,20 @@ exports.getGroupBySlug = async (req, res) => {
             });
         }
 
+        // Get gallery images for the group
+        const galleryImages = await Group.getGroupGallery(group.id);
+        console.log('📸 Gallery images found:', galleryImages.length);
+
+        // Track page view (async - don't wait for completion)
+        AnalyticsService.trackView(group.id, req, res).catch(err => 
+            console.error('Analytics tracking failed:', err)
+        );
+
         // Render the group profile page with the group data
         res.render('groups/profile', {
             title: `${group.name} - Naija Groups`,
             group: group,
+            galleryImages: galleryImages,
             success: req.query.success === '1'
         });
 

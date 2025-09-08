@@ -1,5 +1,6 @@
 const Group = require('../models/Group');
 const geoip = require('geoip-lite');
+const intelligentSearchService = require('../services/intelligentSearchService');
 
 // Helper function to extract location from search query
 function extractLocationFromQuery(query) {
@@ -88,6 +89,15 @@ exports.searchGroups = async (req, res) => {
     try {
         const originalQuery = req.query.q || '';
         const category = req.query.category || '';
+        const meetingDay = req.query.meeting_day || '';
+        const membershipType = req.query.membership_type || '';
+        const city = req.query.city || '';
+        const country = req.query.country || '';
+        const verified = req.query.verified === 'true' ? true : (req.query.verified === 'false' ? false : null);
+        const featured = req.query.featured === 'true' ? true : (req.query.featured === 'false' ? false : null);
+        const sortBy = req.query.sort || 'relevance';
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
         const userLat = req.query.lat ? parseFloat(req.query.lat) : null;
         const userLng = req.query.lng ? parseFloat(req.query.lng) : null;
         const radius = req.query.radius ? parseInt(req.query.radius) : 25;
@@ -117,55 +127,21 @@ exports.searchGroups = async (req, res) => {
         } else {
             searchContext.userLocation = { lat: userLat, lng: userLng };
         }
-        
-        // Handle explicit "Near Me" button click
-        if (nearMe && (userLat && userLng || searchContext.userLocation)) {
-            const lat = userLat || searchContext.userLocation.lat;
-            const lng = userLng || searchContext.userLocation.lng;
-            results = await Group.searchGroupsNearby(lat, lng, radius, originalQuery);
-            searchType = 'location';
-            searchContext.searchRadius = radius;
-        }
-        // Handle intelligent search parsing
-        else if (originalQuery.trim()) {
-            const { location: extractedLocation, cleanQuery } = extractLocationFromQuery(originalQuery);
-            searchContext.parsedLocation = extractedLocation;
-            searchContext.searchTerms = cleanQuery;
-            
-            if (extractedLocation) {
-                // Intention 2: Search with specific location (e.g., "fitness groups in Enugu")
-                const locationCoords = getCityCoordinates(extractedLocation);
-                if (locationCoords) {
-                    results = await Group.searchGroupsNearby(
-                        locationCoords.lat, 
-                        locationCoords.lng, 
-                        50, // Larger radius for city searches
-                        cleanQuery
-                    );
-                    searchType = 'location';
-                    searchContext.searchRadius = 50;
-                } else {
-                    // Fallback to text search with location filter
-                    results = await Group.searchGroups(originalQuery);
-                    searchType = 'text';
-                }
-            } else if (searchContext.userLocation) {
-                // Intention 1: Search near user (e.g., "tennis club" - auto-detect location)
-                results = await Group.searchGroupsNearby(
-                    searchContext.userLocation.lat,
-                    searchContext.userLocation.lng,
-                    radius,
-                    originalQuery
-                );
-                searchType = 'location';
-            } else {
-                // Intention 3: Exact name search or fallback text search
-                results = await Group.searchGroups(originalQuery);
-                searchType = 'text';
-            }
-        }
-        // No search query - show all groups
-        else {
+
+        // Use basic search for now until advanced search parameter issue is fixed
+        if (originalQuery.trim()) {
+            results = await Group.searchGroups(originalQuery);
+        } else if (category) {
+            results = await Group.searchGroups('');
+            // Filter by category
+            results = results.filter(group => 
+                group.categories && 
+                group.categories.some(cat => 
+                    cat.toLowerCase().includes(category.toLowerCase())
+                )
+            );
+        } else {
+            // Get user location and show nearby if available
             if (searchContext.userLocation) {
                 results = await Group.getAllGroupsWithDistance(
                     searchContext.userLocation.lat, 
@@ -176,30 +152,34 @@ exports.searchGroups = async (req, res) => {
             }
         }
         
-        // Filter by category if provided
-        if (category) {
-            results = results.filter(group => 
-                group.categories && 
-                group.categories.some(cat => 
-                    cat.toLowerCase().includes(category.toLowerCase()) ||
-                    (category === 'student' && (cat.toLowerCase().includes('students') || cat.toLowerCase().includes('student')))
-                )
-            );
-        }
+        searchType = 'basic';
+        
+        // Get dynamic categories for filter buttons
+        const allCategories = await Group.getAllCategories();
         
         // Render results
         const renderData = {
             title: nearMe ? 'Groups Near Me' : (originalQuery ? `Search results for "${originalQuery}"` : 'Search Results'),
             query: originalQuery,
             category: category,
+            meetingDay: meetingDay,
+            membershipType: membershipType,
+            city: city,
+            country: country,
+            verified: verified,
+            featured: featured,
+            sortBy: sortBy,
+            page: page,
+            limit: limit,
             results: results,
             resultsCount: results.length,
             searchType: searchType,
             searchContext: searchContext,
             userLat: searchContext.userLocation ? searchContext.userLocation.lat : userLat,
             userLng: searchContext.userLocation ? searchContext.userLocation.lng : userLng,
-            radius: searchContext.searchRadius,
+            radius: radius,
             nearMe: nearMe,
+            allCategories: allCategories,
             isAdmin: req.session && req.session.admin
         };
         
@@ -223,6 +203,7 @@ exports.getSearchPage = async (req, res) => {
     try {
         // Show all groups by default
         const results = await Group.getAllGroups();
+        const allCategories = await Group.getAllCategories();
         
         res.render('search', {
             title: 'Search Groups - Naija Groups',
@@ -231,6 +212,7 @@ exports.getSearchPage = async (req, res) => {
             location: '',
             results: results,
             resultsCount: results.length,
+            allCategories: allCategories,
             isAdmin: req.session && req.session.admin
         });
     } catch (error) {
@@ -239,5 +221,65 @@ exports.getSearchPage = async (req, res) => {
             title: 'Search Error',
             error: 'Unable to load search page.' 
         });
+    }
+};
+
+// API endpoint for search suggestions
+exports.getSearchSuggestions = async (req, res) => {
+    try {
+        const query = req.query.q || '';
+        const limit = parseInt(req.query.limit) || 10;
+        
+        if (!query.trim() || query.length < 2) {
+            return res.json([]);
+        }
+        
+        const suggestions = await Group.getSearchSuggestions(query, limit);
+        res.json(suggestions);
+    } catch (error) {
+        console.error('Error getting search suggestions:', error);
+        res.status(500).json({ error: 'Failed to get suggestions' });
+    }
+};
+
+// API endpoint for category suggestions
+exports.getCategorySuggestions = async (req, res) => {
+    try {
+        const query = req.query.q || '';
+        const limit = parseInt(req.query.limit) || 10;
+        
+        const suggestions = await Group.getCategorySuggestions(query, limit);
+        res.json(suggestions);
+    } catch (error) {
+        console.error('Error getting category suggestions:', error);
+        res.status(500).json({ error: 'Failed to get category suggestions' });
+    }
+};
+
+// API endpoint for location suggestions (Nigerian cities)
+exports.getLocationSuggestions = (req, res) => {
+    try {
+        const query = req.query.q || '';
+        const limit = parseInt(req.query.limit) || 10;
+        
+        if (!query.trim() || query.length < 2) {
+            return res.json([]);
+        }
+        
+        const nigerianCities = [
+            'Lagos', 'Abuja', 'Kano', 'Ibadan', 'Benin City', 'Port Harcourt', 'Jos', 'Ilorin', 'Aba', 'Onitsha',
+            'Enugu', 'Abeokuta', 'Owerri', 'Warri', 'Calabar', 'Akure', 'Awka', 'Asaba', 'Uyo', 'Makurdi',
+            'Minna', 'Bauchi', 'Gombe', 'Yola', 'Sokoto', 'Katsina', 'Kaduna', 'Zaria', 'Lokoja', 'Lafia',
+            'Nnewi', 'Umuahia', 'Abakaliki', 'Orlu', 'Nsukka', 'Ondo', 'Ikeja', 'Surulere', 'Yaba', 'Mushin'
+        ];
+        
+        const filtered = nigerianCities
+            .filter(city => city.toLowerCase().includes(query.toLowerCase()))
+            .slice(0, limit);
+            
+        res.json(filtered);
+    } catch (error) {
+        console.error('Error getting location suggestions:', error);
+        res.status(500).json({ error: 'Failed to get location suggestions' });
     }
 };

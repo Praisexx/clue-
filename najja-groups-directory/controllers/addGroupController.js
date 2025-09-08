@@ -1,4 +1,5 @@
 const Group = require('../models/Group');
+const whatsappService = require('../services/whatsappService');
 
 // Helper function to generate slug from group name
 function generateSlug(name) {
@@ -34,6 +35,13 @@ function validateGroupData(data) {
         errors.push('Website must start with http:// or https://');
     }
     
+    if (data.whatsapp_phone) {
+        const whatsappValidation = whatsappService.validatePhoneNumber(data.whatsapp_phone);
+        if (!whatsappValidation.isValid) {
+            errors.push(whatsappValidation.message);
+        }
+    }
+    
     return errors;
 }
 
@@ -52,6 +60,10 @@ exports.getAddGroupForm = async (req, res) => {
 };
 
 exports.submitGroup = async (req, res) => {
+    console.log('🔄 Form submission started');
+    console.log('📝 Form data received:', req.body);
+    console.log('📎 File uploaded:', req.file ? req.file.originalname : 'No file');
+    
     try {
         const formData = {
             name: req.body.name?.trim(),
@@ -61,12 +73,20 @@ exports.submitGroup = async (req, res) => {
             address: req.body.address?.trim(),
             email: req.body.email?.trim(),
             phone: req.body.phone?.trim(),
+            whatsapp_phone: req.body.whatsapp_phone?.trim(),
             website: req.body.website?.trim(),
+            facebook_url: req.body.facebook_url?.trim(),
+            instagram_url: req.body.instagram_url?.trim(),
+            twitter_url: req.body.twitter_url?.trim(),
+            linkedin_url: req.body.linkedin_url?.trim(),
+            youtube_url: req.body.youtube_url?.trim(),
             categories: req.body.categories ? req.body.categories.split(',').map(c => c.trim()) : [],
             founded_year: req.body.founded_year ? parseInt(req.body.founded_year) : null,
             member_size: req.body.member_size ? parseInt(req.body.member_size) : null,
             membership_type: req.body.membership_type?.trim(),
-            meeting_days: req.body.meeting_days ? req.body.meeting_days : [],
+            meeting_days: req.body.meeting_days ? 
+                (Array.isArray(req.body.meeting_days) ? req.body.meeting_days : [req.body.meeting_days]) 
+                : [],
             logo_url: req.body.logo_url || null // From upload middleware
         };
 
@@ -102,6 +122,7 @@ exports.submitGroup = async (req, res) => {
             address: formData.address,
             email: formData.email,
             phone: formData.phone,
+            whatsapp_phone: formData.whatsapp_phone,
             website: formData.website,
             categories: formData.categories,
             founded_year: formData.founded_year,
@@ -115,14 +136,18 @@ exports.submitGroup = async (req, res) => {
             logo_url: formData.logo_url
         });
 
+        console.log('✅ Group created successfully:', result);
+        
         // Redirect to a success page instead of the group page (since it's pending)
+        console.log('🎉 Rendering success page for:', formData.name);
         res.render('add-group-success', {
             title: 'Group Submitted - Naija Groups',
             groupName: formData.name
         });
 
     } catch (error) {
-        console.error('Error creating group:', error);
+        console.error('❌ Error creating group:', error);
+        console.error('❌ Error stack:', error.stack);
         
         // Check if it's a database constraint error (duplicate slug, etc.)
         if (error.code === '23505') {
