@@ -16,7 +16,7 @@ exports.login = async (req, res) => {
         if (!username || !password) {
             return res.render('admin/login', {
                 title: 'Admin Login - Naija Groups',
-                error: 'Username and password are required'
+                error: 'Username/Email and password are required'
             });
         }
         
@@ -28,7 +28,7 @@ exports.login = async (req, res) => {
         } else {
             res.render('admin/login', {
                 title: 'Admin Login - Naija Groups',
-                error: 'Invalid username or password'
+                error: 'Invalid username/email or password'
             });
         }
     } catch (error) {

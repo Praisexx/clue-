@@ -3,8 +3,9 @@ const pool = require('../config/database');
 
 async function createAdminUser() {
     try {
-        const email = 'admin@naija-groups.com';
-        const password = 'admin123'; // Change this in production!
+        const email = 'yukiwolford7@gmail.com';
+        const username = 'ace';
+        const password = 'chukwudi';
         
         // Hash the password
         const saltRounds = 10;
@@ -12,8 +13,8 @@ async function createAdminUser() {
         
         // Check if admin already exists
         const existingAdmin = await pool.query(
-            'SELECT * FROM admins WHERE email = $1',
-            [email]
+            'SELECT * FROM admins WHERE email = $1 OR username = $2',
+            [email, username]
         );
         
         if (existingAdmin.rows.length > 0) {
@@ -23,14 +24,14 @@ async function createAdminUser() {
         
         // Create admin user
         const result = await pool.query(
-            'INSERT INTO admins (email, password_hash, role) VALUES ($1, $2, $3) RETURNING *',
-            [email, password_hash, 'admin']
+            'INSERT INTO admins (email, username, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING *',
+            [email, username, password_hash, 'admin']
         );
         
         console.log('🎉 Admin user created successfully!');
         console.log('📧 Email:', email);
+        console.log('👤 Username:', username);
         console.log('🔐 Password:', password);
-        console.log('⚠️  IMPORTANT: Change the password in production!');
         
     } catch (error) {
         console.error('❌ Failed to create admin user:', error.message);
