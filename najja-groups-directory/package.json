@@ -8,7 +8,7 @@
     "dev": "nodemon server.js"
   },
   "engines": {
-    "node": "22.x" 
+    "node": "24.x" 
   },
   "keywords": ["nigeria", "diaspora", "groups", "community", "directory"],
   "author": "",
