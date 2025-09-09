@@ -26,7 +26,7 @@ app.use(session({
     store: new pgSession({
         pool: pool,           // Reuse existing DB connection
         tableName: 'session', // Table name in DB
-        createTableIfMissing: true // ✅ auto-create session table if it doesn't exist
+        
     }),
     secret: process.env.SESSION_SECRET || 'najja-groups-secret-key-change-in-production',
     resave: false,
