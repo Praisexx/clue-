@@ -11,9 +11,11 @@ exports.getLoginPage = (req, res) => {
 // Handle admin login
 exports.login = async (req, res) => {
     try {
+        console.log('🔍 Login attempt:', { username: req.body.username });
         const { username, password } = req.body;
         
         if (!username || !password) {
+            console.log('❌ Missing credentials');
             return res.render('admin/login', {
                 title: 'Admin Login - Naija Groups',
                 error: 'Username/Email and password are required'
@@ -21,18 +23,21 @@ exports.login = async (req, res) => {
         }
         
         const admin = await Admin.authenticate(username, password);
+        console.log('🔐 Authentication result:', admin ? 'SUCCESS' : 'FAILED');
         
         if (admin) {
             req.session.admin = admin;
+            console.log('✅ Session set, redirecting to dashboard');
             res.redirect('/admin/dashboard');
         } else {
+            console.log('❌ Invalid credentials');
             res.render('admin/login', {
                 title: 'Admin Login - Naija Groups',
                 error: 'Invalid username/email or password'
             });
         }
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
         res.render('admin/login', {
             title: 'Admin Login - Naija Groups',
             error: 'Login failed. Please try again.'
@@ -43,6 +48,15 @@ exports.login = async (req, res) => {
 // Admin dashboard
 exports.getDashboard = async (req, res) => {
     try {
+        console.log('📊 Dashboard access attempt');
+        console.log('🔑 Session admin:', req.session.admin ? 'EXISTS' : 'MISSING');
+        
+        if (!req.session.admin) {
+            console.log('❌ No admin session, redirecting to login');
+            return res.redirect('/admin/login');
+        }
+        
+        console.log('✅ Loading dashboard data...');
         const pendingGroups = await Admin.getPendingGroups();
         const allGroups = await Admin.getAllGroups();
         const approvedGroups = allGroups.filter(group => group.status === 'approved');
@@ -60,7 +74,7 @@ exports.getDashboard = async (req, res) => {
             pendingGroups: pendingGroups.slice(0, 5) // Show first 5 pending
         });
     } catch (error) {
-        console.error('Dashboard error:', error);
+        console.error('❌ Dashboard error:', error);
         res.status(500).render('error', {
             title: 'Dashboard Error',
             error: 'Unable to load dashboard'
