@@ -88,7 +88,7 @@ Nigerian Diaspora Groups Directory
 
   🛠 Technical Stack
 
-  - Backend: Node.js with Express framework
+  - Backend: node.js  with Express framework
   - Database: PostgreSQL with PostGIS for geospatial
   features
   - Frontend: Server-side rendered EJS templates with
