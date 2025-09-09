@@ -6,7 +6,7 @@ console.log('Database URL:', process.env.DATABASE_URL); // Check if the URL is l
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     // Add this for ElephantSQL or other cloud providers to avoid error:
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render.com') ? { rejectUnauthorized: false } : false
 });
 
 // Test the connection immediately
